@@ -1,5 +1,6 @@
 //javascript for controlling Census LEHD Commute Patterns WebMap
 //written by Bill Hereth April 2021
+//updated by Chris Day February 2023
 
 
 var dCategoryOptions = [
@@ -18,9 +19,10 @@ var dDisplayOptions = [
 sDefaultDisplay = "number"; //must be same as "selected" above
 
 var dMapUnitOptions = [
-  { label: "City level"              , name: "City"              , name_plural: "Cities"             , value: "city"      , fieldname: "CODE3"  , minScaleForLabels: 3000000, selected: true },
-  { label: "Census Tract level"      , name: "Census Tract"      , name_plural: "Census Tracts"      , value: "tract"     , fieldname: "GEOID20", minScaleForLabels:  800000                 },
-  { label: "Census Block Group level", name: "Census Block Group", name_plural: "Census Block Groups", value: "blockgroup", fieldname: "GEOID"  , minScaleForLabels:  150000                 }
+  { label: "City level"                 , name: "City"                 , name_plural: "Cities"                , value: "city"      , fieldname: "CODE3"  , minScaleForLabels: 3000000, selected: true },
+  { label: "Census Tract level"         , name: "Census Tract"         , name_plural: "Census Tracts"         , value: "tract"     , fieldname: "GEOID20", minScaleForLabels:  800000                 },
+  { label: "Census Small District level", name: "Census Small District", name_plural: "Census Small Districts", value: "sd"        , fieldname: "DSML_NAME", minScaleForLabels:  800000               },
+  { label: "Census Block Group level"   , name: "Census Block Group"   , name_plural: "Census Block Groups"   , value: "blockgroup", fieldname: "GEOID"  , minScaleForLabels:  150000                 }
 ];
 
 sDefaultMapUnit = "city"; //must be same as "selected" above
@@ -50,6 +52,9 @@ var sBGPercentSALayerName = "BlockGroup CommutePatterns Percent SelectedArea";
 var sTCNumberLayerName    = "Tract CommutePatterns Number";
 var sTCPercentMULayerName = "Tract CommutePatterns Percent MapUnit";
 var sTCPercentSALayerName = "Tract CommutePatterns Percent SelectedArea";
+var sSDNumberLayerName    = "SD CommutePatterns Number";
+var sSDPercentMULayerName = "SD CommutePatterns Percent MapUnit";
+var sSDPercentSALayerName = "SD CommutePatterns Percent SelectedArea";
 var sCTNumberLayerName    = "City CommutePatterns Number";
 var sCTPercentMULayerName = "City CommutePatterns Percent MapUnit";
 var sCTPercentSALayerName = "City CommutePatterns Percent SelectedArea";
@@ -62,8 +67,8 @@ var fnAreaID      = "CODE3"       ; //field name for TAZID
 var sCLightGrey   = "#EEEEEE";
 var sCDefaultGrey = "#CCCCCC"     ; //color of default line
 
-var fnWorkWhoLiveInSuffix = '_x';
-var fnLiveWhoWorkInSuffix = '_y';
+var fnWorkWhoLiveInSuffix = '_h';
+var fnLiveWhoWorkInSuffix = '_w';
 
 //var minScaleForLabels = 187150;
 var labelClassOn;
@@ -290,6 +295,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
               _sNumberLayerName    = sTCNumberLayerName   ;
               _sPercentSALayerName = sTCPercentSALayerName;
               _sPercentMULayerName = sTCPercentMULayerName;
+            } else if (curMapUnit == 'sd') {
+              _sNumberLayerName    = sSDNumberLayerName   ;
+              _sPercentSALayerName = sSDPercentSALayerName;
+              _sPercentMULayerName = sSDPercentMULayerName;
             } else if (curMapUnit == 'city') {
               _sNumberLayerName    = sCTNumberLayerName   ;
               _sPercentSALayerName = sCTPercentSALayerName;
@@ -520,6 +529,9 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             currentLayerInfo.title == sTCNumberLayerName    ||
             currentLayerInfo.title == sTCPercentMULayerName ||
             currentLayerInfo.title == sTCPercentSALayerName ||
+            currentLayerInfo.title == sSDNumberLayerName    ||
+            currentLayerInfo.title == sSDPercentMULayerName ||
+            currentLayerInfo.title == sSDPercentSALayerName ||
             currentLayerInfo.title == sCTNumberLayerName    ||
             currentLayerInfo.title == sCTPercentMULayerName ||
             currentLayerInfo.title == sCTPercentSALayerName) {
