@@ -2,10 +2,7 @@
 //written by Bill Hereth April 2021
 //updated by Chris Day February 2023
 
-var dDataOptions = [
-  {label: "LEHD Data"       , name: "LEHD"       , value: "lehd_data", selected: true},
-  {label: "StreetLight Data", name: "StreetLight", value: "sl_data"}
-];
+var curTab = "LEHD"; //Options: LEHD, SL, LEHDVSL
 
 var dCategoryOptions = [
   { label: "where Salt Lake City residents work"          , name: "Residents Work", value: "work_who_live_in", selected: true },
@@ -24,13 +21,10 @@ sDefaultDisplay = "number"; //must be same as "selected" above
 
 var dMapUnitOptions = [
   { label: "City level"                 , name: "City"                 , name_plural: "Cities"                , value: "city"      , fieldname: "CODE3"    , minScaleForLabels: 3000000, selected: true },
-  { label: "Census Tract level"         , name: "Census Tract"         , name_plural: "Census Tracts"         , value: "tract"     , fieldname: "GEOID20"  , minScaleForLabels:  800000                 },
   { label: "Census Small District level", name: "Census Small District", name_plural: "Census Small Districts", value: "sd"        , fieldname: "DSML_NAME", minScaleForLabels:  800000                 },
+  { label: "Census Tract level"         , name: "Census Tract"         , name_plural: "Census Tracts"         , value: "tract"     , fieldname: "GEOID20"  , minScaleForLabels:  800000                 },
   { label: "Census Block Group level"   , name: "Census Block Group"   , name_plural: "Census Block Groups"   , value: "blockgroup", fieldname: "GEOID"    , minScaleForLabels:  150000                 }
 ];
-
-sDefaultDataSource = "lehd_data"; //must be same as "selected" above
-var curDataSource = sDefaultDataSource;
 
 sDefaultMapUnit = "city"; 
 
@@ -183,7 +177,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
       //Initialize Selection Layer, FromLayer, and ToLayer and define selection colors
       layerInfosObject = LayerInfos.getInstanceSync();
-      if (curDataSource == "lehd_data"){
+      if (curTab == "LEHD"){
         for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
           var currentLayerInfo = layerInfosObject._layerInfos[j];    
           if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
@@ -368,21 +362,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       curDisplay = sDefaultDisplay;
       cmbDisplay.startup();
 
-      cmbDataSource = new Select({
-        id: "selectDataSource",
-        name: "selectDataSourceName",
-        options: dDataOptions,
-        onChange: function(){
-          curDataSource = this.value;
-          parent.hideAllDisplayLayers();
-          parent.changeZoom();
-          parent.setLegendBar();
-          parent.updateDisplayLayer();
-        }
-      }, "cmbDataSource");
-      curDataSource = sDefaultDataSource;
-      cmbDataSource.startup();
-
       cmbMapUnit = new Select({
         id: "selectMapUnit",
         name: "selectMapUnitName",
@@ -562,28 +541,28 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     getCurAreaName: function() {
-      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
       var _curAreaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       return _curAreaName[0]['label'];
     },
 
     getAreaNameFromCode: function(code3) {
-      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
       var _areaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==code3);} );
       return _areaName[0]['label'];
     },
 
     getCurAreaResidents: function() {
-      var suffix = (curDataSource == "lehd_data") ? fnWorkWhoLiveInSuffix: flWorkWhoLiveInSuffix
-      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var suffix = (curTab == "LEHD") ? fnWorkWhoLiveInSuffix: flWorkWhoLiveInSuffix
+      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
       var _curAreaResidents = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaResidents[0]['people'+ suffix]/100)*100;
     },
 
     getCurAreaWorkers: function() {
-      var suffix = (curDataSource == "lehd_data") ? fnLiveWhoWorkInSuffix: flLiveWhoWorkInSuffix
-      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var suffix = (curTab == "LEHD") ? fnLiveWhoWorkInSuffix: flLiveWhoWorkInSuffix
+      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
       var _curAreaWorkers = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaWorkers[0]['people'+ suffix]/100)*100;
@@ -592,13 +571,13 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     getCurSuffix: function() {
       var _curSuffix = '';
       if (curCategory == 'work_who_live_in') {
-        if (curDataSource == "lehd_data"){
+        if (curTab == "LEHD"){
           _curSuffix = fnWorkWhoLiveInSuffix;
         } else{
           _curSuffix = flWorkWhoLiveInSuffix;
         }
       } else if (curCategory == 'live_who_work_in') {
-        if (curDataSource == "lehd_data"){
+        if (curTab == "LEHD"){
           _curSuffix = fnLiveWhoWorkInSuffix;
         } else{
           _curSuffix = flLiveWhoWorkInSuffix;
@@ -654,8 +633,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       var _sPercentSALayerName = "";
       var _sPercentMULayerName = "";
 
-      console.log("curDataSource is " + curDataSource);
-      if (curDataSource == 'lehd_data'){
+      if (curTab == "LEHD"){
         if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
           _sNumberLayerName    = sBGNumberLayerName   ;
           _sPercentSALayerName = sBGPercentSALayerName;
@@ -799,11 +777,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         //Show County-Level Stats
 
         if (curDisplay == 'number') {
-          dData = (curDataSource == "lehd_data") ? dCountyData_number: dSLCountyData_number;
+          dData = (curTab == "LEHD") ? dCountyData_number: dSLCountyData_number;
         } else if (curDisplay == 'percent_sa') {
-          dData = (curDataSource == "lehd_data") ? dCountyData_percent_sa: dSLCountyData_percent_sa;
+          dData = (curTab == "LEHD") ? dCountyData_percent_sa: dSLCountyData_percent_sa;
         } else if (curDisplay == 'percent_mu') {
-          dData = (curDataSource == "lehd_data") ? dCountyData_percent_mu: dSLCountyData_percent_mu;
+          dData = (curTab == "LEHD") ? dCountyData_percent_mu: dSLCountyData_percent_mu;
           dom.byId("toptentitle").innerHTML = dom.byId("toptentitle").innerHTML + "<p><strong>(Share of People in Each City)</strong></p>"
           _countystats = _countystats + "<p><strong>(Share of People in Each County)</strong></p><table width=\"330px;\">";
         }
@@ -1192,6 +1170,81 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       lyrCurrentDisplay.setOpacity(0.5);
       lyrCurrentDisplay.refresh();
       lyrCurrentDisplay.show();
+    },
+
+    _selectLEHD: function() {
+      console.log('_selectLEHD');
+    
+      if (curTab=="LEHD") return;
+  
+      curTab = "LEHD";
+  
+      // LEHD is always absolute
+      curAoP = 'absolute';
+  
+      dom.byId("LEHD_CONTROL").classList.remove('unselectedToggle');
+      dom.byId("LEHD_CONTROL").classList.add   (  'selectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.remove(  'selectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.add   ('unselectedToggle');
+    
+      dom.byId("LEHDVSL_CONTROL").classList.remove(  'selectedToggle');
+      dom.byId("LEHDVSL_CONTROL").classList.add   ('unselectedToggle');
+    
+      dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_blue.png')";
+      dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png' )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'     )";
+     
+      sidebar.updateAreaSelection();
+      sidebar.zoomToArea();
+      sidebar.updateDisplayLayer();
+    },
+  
+    _selectSL: function() {
+      console.log('_selectSL');
+    
+      if (curTab=="SL") return;
+      
+      curTab = "SL";
+    
+      dom.byId("LEHD_CONTROL").classList.remove(  'selectedToggle');
+      dom.byId("LEHD_CONTROL").classList.add   ('unselectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.remove('unselectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.add   (  'selectedToggle');
+    
+      dom.byId("LEHDVSL_CONTROL").classList.remove(  'selectedToggle');
+      dom.byId("LEHDVSL_CONTROL").classList.add   ('unselectedToggle');
+    
+      dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_white.png')";
+      dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_blue.png'   )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'      )";
+    
+      sidebar.updateAreaSelection();
+      sidebar.zoomToArea();
+      sidebar.updateDisplayLayer();
+    },
+  
+    _selectLEHDVSL: function() {
+      console.log('_selectLEHDVSL');
+      
+      if (curTab=="LEHDVSL") return;
+  
+      curTab = "LEHDVSL";
+      
+      dom.byId("LEHD_CONTROL").classList.remove(  'selectedToggle');
+      dom.byId("LEHD_CONTROL").classList.add   ('unselectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.remove(  'selectedToggle');
+      dom.byId("SL_CONTROL"  ).classList.add   ('unselectedToggle');
+      
+      dom.byId("LEHDVSL_CONTROL").classList.remove('unselectedToggle');
+      dom.byId("LEHDVSL_CONTROL").classList.add   (  'selectedToggle');
+      
+      dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_white.png')";
+      dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png'  )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_blue.png'       )";
+  
+      sidebar.updateAreaSelection();
+      sidebar.zoomToArea();
+      sidebar.updateDisplayLayer();
     },
     
     onOpen: function(){
