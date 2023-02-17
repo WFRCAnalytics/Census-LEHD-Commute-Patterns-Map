@@ -2,6 +2,10 @@
 //written by Bill Hereth April 2021
 //updated by Chris Day February 2023
 
+var dDataOptions = [
+  {label: "LEHD Data"       , name: "LEHD"       , value: "lehd_data", selected: true},
+  {label: "StreetLight Data", name: "StreetLight", value: "sl_data"}
+];
 
 var dCategoryOptions = [
   { label: "where Salt Lake City residents work"          , name: "Residents Work", value: "work_who_live_in", selected: true },
@@ -19,13 +23,16 @@ var dDisplayOptions = [
 sDefaultDisplay = "number"; //must be same as "selected" above
 
 var dMapUnitOptions = [
-  { label: "City level"                 , name: "City"                 , name_plural: "Cities"                , value: "city"      , fieldname: "CODE3"  , minScaleForLabels: 3000000, selected: true },
-  { label: "Census Tract level"         , name: "Census Tract"         , name_plural: "Census Tracts"         , value: "tract"     , fieldname: "GEOID20", minScaleForLabels:  800000                 },
-  { label: "Census Small District level", name: "Census Small District", name_plural: "Census Small Districts", value: "sd"        , fieldname: "DSML_NAME", minScaleForLabels:  800000               },
-  { label: "Census Block Group level"   , name: "Census Block Group"   , name_plural: "Census Block Groups"   , value: "blockgroup", fieldname: "GEOID"  , minScaleForLabels:  150000                 }
+  { label: "City level"                 , name: "City"                 , name_plural: "Cities"                , value: "city"      , fieldname: "CODE3"    , minScaleForLabels: 3000000, selected: true },
+  { label: "Census Tract level"         , name: "Census Tract"         , name_plural: "Census Tracts"         , value: "tract"     , fieldname: "GEOID20"  , minScaleForLabels:  800000                 },
+  { label: "Census Small District level", name: "Census Small District", name_plural: "Census Small Districts", value: "sd"        , fieldname: "DSML_NAME", minScaleForLabels:  800000                 },
+  { label: "Census Block Group level"   , name: "Census Block Group"   , name_plural: "Census Block Groups"   , value: "blockgroup", fieldname: "GEOID"    , minScaleForLabels:  150000                 }
 ];
 
-sDefaultMapUnit = "city"; //must be same as "selected" above
+sDefaultDataSource = "lehd_data"; //must be same as "selected" above
+var curDataSource = sDefaultDataSource;
+
+sDefaultMapUnit = "city"; 
 
 sDefaultArea = "SLC";
 
@@ -46,18 +53,33 @@ var lyrCurrentDisplay; //current layer being displayed (either lyrNumber or lyrP
 
 var sAreasLayerName       = "Municipalities and Townships";
 var sAreasLayerNameCounty = "Counties";
-var sBGNumberLayerName    = "BlockGroup CommutePatterns Number";
-var sBGPercentMULayerName = "BlockGroup CommutePatterns Percent MapUnit";
-var sBGPercentSALayerName = "BlockGroup CommutePatterns Percent SelectedArea";
-var sTCNumberLayerName    = "Tract CommutePatterns Number";
-var sTCPercentMULayerName = "Tract CommutePatterns Percent MapUnit";
-var sTCPercentSALayerName = "Tract CommutePatterns Percent SelectedArea";
-var sSDNumberLayerName    = "SD CommutePatterns Number";
-var sSDPercentMULayerName = "SD CommutePatterns Percent MapUnit";
-var sSDPercentSALayerName = "SD CommutePatterns Percent SelectedArea";
-var sCTNumberLayerName    = "City CommutePatterns Number";
-var sCTPercentMULayerName = "City CommutePatterns Percent MapUnit";
-var sCTPercentSALayerName = "City CommutePatterns Percent SelectedArea";
+
+var sBGNumberLayerName    = "LEHD BlockGroup CommutePatterns Number";
+var sBGPercentMULayerName = "LEHD BlockGroup CommutePatterns Percent MapUnit";
+var sBGPercentSALayerName = "LEHD BlockGroup CommutePatterns Percent SelectedArea";
+var sTCNumberLayerName    = "LEHD Tract CommutePatterns Number";
+var sTCPercentMULayerName = "LEHD Tract CommutePatterns Percent MapUnit";
+var sTCPercentSALayerName = "LEHD Tract CommutePatterns Percent SelectedArea";
+var sSDNumberLayerName    = "LEHD SD CommutePatterns Number";
+var sSDPercentMULayerName = "LEHD SD CommutePatterns Percent MapUnit";
+var sSDPercentSALayerName = "LEHD SD CommutePatterns Percent SelectedArea";
+var sCTNumberLayerName    = "LEHD City CommutePatterns Number";
+var sCTPercentMULayerName = "LEHD City CommutePatterns Percent MapUnit";
+var sCTPercentSALayerName = "LEHD City CommutePatterns Percent SelectedArea";
+
+var slBGNumberLayerName    = "SL BlockGroup CommutePatterns Number";
+var slBGPercentMULayerName = "SL BlockGroup CommutePatterns Percent MapUnit";
+var slBGPercentSALayerName = "SL BlockGroup CommutePatterns Percent SelectedArea";
+var slTCNumberLayerName    = "SL Tract CommutePatterns Number";
+var slTCPercentMULayerName = "SL Tract CommutePatterns Percent MapUnit";
+var slTCPercentSALayerName = "SL Tract CommutePatterns Percent SelectedArea";
+var slSDNumberLayerName    = "SL SD CommutePatterns Number";
+var slSDPercentMULayerName = "SL SD CommutePatterns Percent MapUnit";
+var slSDPercentSALayerName = "SL SD CommutePatterns Percent SelectedArea";
+var slCTNumberLayerName    = "SL City CommutePatterns Number";
+var slCTPercentMULayerName = "SL City CommutePatterns Percent MapUnit";
+var slCTPercentSALayerName = "SL City CommutePatterns Percent SelectedArea";
+
 
 var layerInfosObject;
 
@@ -69,6 +91,8 @@ var sCDefaultGrey = "#CCCCCC"     ; //color of default line
 
 var fnWorkWhoLiveInSuffix = '_h';
 var fnLiveWhoWorkInSuffix = '_w';
+var flWorkWhoLiveInSuffix = '_o';
+var flLiveWhoWorkInSuffix = '_d';
 
 //var minScaleForLabels = 187150;
 var labelClassOn;
@@ -159,18 +183,35 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
       //Initialize Selection Layer, FromLayer, and ToLayer and define selection colors
       layerInfosObject = LayerInfos.getInstanceSync();
-      for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
-        var currentLayerInfo = layerInfosObject._layerInfos[j];    
-        if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
-          lyrAreas = layerInfosObject._layerInfos[j].layerObject;
-        } else if (currentLayerInfo.title == sCTNumberLayerName) {
-          lyrNumber = layerInfosObject._layerInfos[j].layerObject;
-        } else if (currentLayerInfo.title == sCTPercentMULayerName) {
-          lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
-        } else if (currentLayerInfo.title == sCTPercentSALayerName) {
-          lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+      if (curDataSource == "lehd_data"){
+        for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
+          var currentLayerInfo = layerInfosObject._layerInfos[j];    
+          if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
+            lyrAreas = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == sCTNumberLayerName) {
+            lyrNumber = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == sCTPercentMULayerName) {
+            lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == sCTPercentSALayerName) {
+            lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+          }
+        }
+      } else {
+        for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
+          var currentLayerInfo = layerInfosObject._layerInfos[j];    
+          if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
+            lyrAreas = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == slCTNumberLayerName) {
+            lyrNumber = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == slCTPercentMULayerName) {
+            lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == slCTPercentSALayerName) {
+            lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+          }
         }
       }
+
+
 
       //Populate BinData Object
       dojo.xhrGet({
@@ -189,7 +230,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       //Populate AreaData Object
       dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/citytownshipdata.json",
+        url: "widgets/LEHDCommutePatternsSidebar/data/citytownshipdata.json", //update this to get the sl data when sl data is selected
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
@@ -274,48 +315,28 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       curDisplay = sDefaultDisplay;
       cmbDisplay.startup();
 
+      cmbDataSource = new Select({
+        id: "selectDataSource",
+        name: "selectDataSourceName",
+        options: dDataOptions,
+        onChange: function(){
+          curDataSource = this.value;
+          parent.hideAllDisplayLayers();
+          parent.changeZoom();
+          parent.setLegendBar();
+          parent.updateDisplayLayer();
+        }
+      }, "cmbDataSource");
+      curDataSource = sDefaultDataSource;
+      cmbDataSource.startup();
+
       cmbMapUnit = new Select({
         id: "selectMapUnit",
         name: "selectMapUnitName",
         options: dMapUnitOptions,
         onChange: function(){
             curMapUnit = this.value;
-
             parent.hideAllDisplayLayers();
-
-            var _sNumberLayerName    = "";
-            var _sPercentSALayerName = "";
-            var _sPercentMULayerName = "";
-            
-            if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
-              _sNumberLayerName    = sBGNumberLayerName   ;
-              _sPercentSALayerName = sBGPercentSALayerName;
-              _sPercentMULayerName = sBGPercentMULayerName;
-            } else if (curMapUnit == 'tract') {
-              _sNumberLayerName    = sTCNumberLayerName   ;
-              _sPercentSALayerName = sTCPercentSALayerName;
-              _sPercentMULayerName = sTCPercentMULayerName;
-            } else if (curMapUnit == 'sd') {
-              _sNumberLayerName    = sSDNumberLayerName   ;
-              _sPercentSALayerName = sSDPercentSALayerName;
-              _sPercentMULayerName = sSDPercentMULayerName;
-            } else if (curMapUnit == 'city') {
-              _sNumberLayerName    = sCTNumberLayerName   ;
-              _sPercentSALayerName = sCTPercentSALayerName;
-              _sPercentMULayerName = sCTPercentMULayerName;
-            }
-            
-            for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
-              var currentLayerInfo = layerInfosObject._layerInfos[j];    
-              if (currentLayerInfo.title == _sNumberLayerName) {
-                lyrNumber = layerInfosObject._layerInfos[j].layerObject;
-              } else if (currentLayerInfo.title == _sPercentSALayerName) {
-                lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
-              } else if (currentLayerInfo.title == _sPercentMULayerName) {
-                lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
-              }
-            }
-
             parent.changeZoom();
             parent.setLegendBar();
             parent.updateDisplayLayer();
@@ -480,7 +501,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     numberWithCommas: function(x) {
-      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      if (x === undefined){
+        return "";
+      } else{
+        return Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
     },
 
     getCurAreaName: function() {
@@ -494,23 +519,33 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     getCurAreaResidents: function() {
+      var suffix = (curDataSource == "lehd_data") ? fnWorkWhoLiveInSuffix: flWorkWhoLiveInSuffix
       var _curAreaResidents = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==curArea);} );
       //return rounded value up to next 100
-      return Math.ceil(_curAreaResidents[0]['people'+ fnWorkWhoLiveInSuffix]/100)*100;
+      return Math.ceil(_curAreaResidents[0]['people'+ suffix]/100)*100;
     },
 
     getCurAreaWorkers: function() {
+      var suffix = (curDataSource == "lehd_data") ? fnLiveWhoWorkInSuffix: flLiveWhoWorkInSuffix
       var _curAreaWorkers = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==curArea);} );
       //return rounded value up to next 100
-      return Math.ceil(_curAreaWorkers[0]['people'+ fnLiveWhoWorkInSuffix]/100)*100;
+      return Math.ceil(_curAreaWorkers[0]['people'+ suffix]/100)*100;
     },
 
     getCurSuffix: function() {
       var _curSuffix = '';
       if (curCategory == 'work_who_live_in') {
-        _curSuffix = fnWorkWhoLiveInSuffix;
+        if (curDataSource == "lehd_data"){
+          _curSuffix = fnWorkWhoLiveInSuffix;
+        } else{
+          _curSuffix = flWorkWhoLiveInSuffix;
+        }
       } else if (curCategory == 'live_who_work_in') {
-        _curSuffix = fnLiveWhoWorkInSuffix;
+        if (curDataSource == "lehd_data"){
+          _curSuffix = fnLiveWhoWorkInSuffix;
+        } else{
+          _curSuffix = flLiveWhoWorkInSuffix;
+        }
       }
       return _curSuffix;
     },
@@ -534,7 +569,19 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             currentLayerInfo.title == sSDPercentSALayerName ||
             currentLayerInfo.title == sCTNumberLayerName    ||
             currentLayerInfo.title == sCTPercentMULayerName ||
-            currentLayerInfo.title == sCTPercentSALayerName) {
+            currentLayerInfo.title == sCTPercentSALayerName ||
+            currentLayerInfo.title == slBGNumberLayerName   ||
+            currentLayerInfo.title == slBGPercentMULayerName||
+            currentLayerInfo.title == slBGPercentSALayerName||
+            currentLayerInfo.title == slTCNumberLayerName   ||
+            currentLayerInfo.title == slTCPercentMULayerName||
+            currentLayerInfo.title == slTCPercentSALayerName||
+            currentLayerInfo.title == slSDNumberLayerName   ||
+            currentLayerInfo.title == slSDPercentMULayerName||
+            currentLayerInfo.title == slSDPercentSALayerName||
+            currentLayerInfo.title == slCTNumberLayerName   ||
+            currentLayerInfo.title == slCTPercentMULayerName||
+            currentLayerInfo.title == slCTPercentSALayerName) {
           _lyr = layerInfosObject._layerInfos[j].layerObject;
           _lyr.hide();
         }
@@ -545,6 +592,60 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       console.log('updateDisplayLayer');
 
       this.hideAllDisplayLayers();
+      
+      var _sNumberLayerName    = "";
+      var _sPercentSALayerName = "";
+      var _sPercentMULayerName = "";
+
+      console.log("curDataSource is " + curDataSource);
+      if (curDataSource == 'lehd_data'){
+        if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
+          _sNumberLayerName    = sBGNumberLayerName   ;
+          _sPercentSALayerName = sBGPercentSALayerName;
+          _sPercentMULayerName = sBGPercentMULayerName;
+        } else if (curMapUnit == 'tract') {
+          _sNumberLayerName    = sTCNumberLayerName   ;
+          _sPercentSALayerName = sTCPercentSALayerName;
+          _sPercentMULayerName = sTCPercentMULayerName;
+        } else if (curMapUnit == 'sd') {
+          _sNumberLayerName    = sSDNumberLayerName   ;
+          _sPercentSALayerName = sSDPercentSALayerName;
+          _sPercentMULayerName = sSDPercentMULayerName;
+        } else if (curMapUnit == 'city') {
+          _sNumberLayerName    = sCTNumberLayerName   ;
+          _sPercentSALayerName = sCTPercentSALayerName;
+          _sPercentMULayerName = sCTPercentMULayerName;
+        }
+      } else{
+        if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
+          _sNumberLayerName    = slBGNumberLayerName   ;
+          _sPercentSALayerName = slBGPercentSALayerName;
+          _sPercentMULayerName = slBGPercentMULayerName;
+        } else if (curMapUnit == 'tract') {
+          _sNumberLayerName    = slTCNumberLayerName   ;
+          _sPercentSALayerName = slTCPercentSALayerName;
+          _sPercentMULayerName = slTCPercentMULayerName;
+        } else if (curMapUnit == 'sd') {
+          _sNumberLayerName    = slSDNumberLayerName   ;
+          _sPercentSALayerName = slSDPercentSALayerName;
+          _sPercentMULayerName = slSDPercentMULayerName;
+        } else if (curMapUnit == 'city') {
+          _sNumberLayerName    = slCTNumberLayerName   ;
+          _sPercentSALayerName = slCTPercentSALayerName;
+          _sPercentMULayerName = slCTPercentMULayerName;
+        }
+      }
+      
+      for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
+        var currentLayerInfo = layerInfosObject._layerInfos[j];    
+        if (currentLayerInfo.title == _sNumberLayerName) {
+          lyrNumber = layerInfosObject._layerInfos[j].layerObject;
+        } else if (currentLayerInfo.title == _sPercentSALayerName) {
+          lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+        } else if (currentLayerInfo.title == _sPercentMULayerName) {
+          lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
+        }
+      }
 
       if (curArea != '' && curCategory != '') {
         if (curDisplay == 'number'){
