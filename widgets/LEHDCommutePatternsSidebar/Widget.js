@@ -230,7 +230,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       //Populate AreaData Object
       dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/citytownshipdata.json", //update this to get the sl data when sl data is selected
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_citytownshipdata.json", //update this to get the sl data when sl data is selected
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
@@ -243,10 +243,24 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
                 or if the request was unsuccessful altogether. */
         }
       });
+      dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/sl_citytownshipdata.json", //update this to get the sl data when sl data is selected
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('citytownshipdata.json');
+            dSLAreaOptions = obj;
+            parent.setupAreaDropDown();
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
 
       //Populate CountyData Object
       dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/countydata_number.json",
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_number.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
@@ -258,10 +272,23 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
                 or if the request was unsuccessful altogether. */
         }
       });
+      dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/sl_countydata_number.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_number.json');
+            dSLCountyData_number = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
 
       //Populate CountyData Object
       dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/countydata_percent_sa.json",
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_percent_sa.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
@@ -273,15 +300,41 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
                 or if the request was unsuccessful altogether. */
         }
       });
+      dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/sl_countydata_percent_sa.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_percent_sa.json');
+            dSLCountyData_percent_sa = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
 
       //Populate CountyData Object
       dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/countydata_percent_mu.json",
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_percent_mu.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('countydata_percent_mu.json');
             dCountyData_percent_mu = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
+      dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2019/sl_countydata_percent_mu.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_percent_mu.json');
+            dSLCountyData_percent_mu = obj;
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -509,25 +562,29 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     getCurAreaName: function() {
-      var _curAreaName = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==curArea);} );
+      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var _curAreaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       return _curAreaName[0]['label'];
     },
 
     getAreaNameFromCode: function(code3) {
-      var _areaName = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==code3);} );
+      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var _areaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==code3);} );
       return _areaName[0]['label'];
     },
 
     getCurAreaResidents: function() {
       var suffix = (curDataSource == "lehd_data") ? fnWorkWhoLiveInSuffix: flWorkWhoLiveInSuffix
-      var _curAreaResidents = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==curArea);} );
+      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var _curAreaResidents = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaResidents[0]['people'+ suffix]/100)*100;
     },
 
     getCurAreaWorkers: function() {
       var suffix = (curDataSource == "lehd_data") ? fnLiveWhoWorkInSuffix: flLiveWhoWorkInSuffix
-      var _curAreaWorkers = dAreaOptions.filter( function(dAreaOptions){return (dAreaOptions['value']==curArea);} );
+      var areaOptions = (curDataSource == "lehd_data") ? dAreaOptions: dSLAreaOptions
+      var _curAreaWorkers = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaWorkers[0]['people'+ suffix]/100)*100;
     },
@@ -742,11 +799,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         //Show County-Level Stats
 
         if (curDisplay == 'number') {
-          dData = dCountyData_number;
+          dData = (curDataSource == "lehd_data") ? dCountyData_number: dSLCountyData_number;
         } else if (curDisplay == 'percent_sa') {
-          dData = dCountyData_percent_sa;
+          dData = (curDataSource == "lehd_data") ? dCountyData_percent_sa: dSLCountyData_percent_sa;
         } else if (curDisplay == 'percent_mu') {
-          dData = dCountyData_percent_mu;
+          dData = (curDataSource == "lehd_data") ? dCountyData_percent_mu: dSLCountyData_percent_mu;
           dom.byId("toptentitle").innerHTML = dom.byId("toptentitle").innerHTML + "<p><strong>(Share of People in Each City)</strong></p>"
           _countystats = _countystats + "<p><strong>(Share of People in Each County)</strong></p><table width=\"330px;\">";
         }
