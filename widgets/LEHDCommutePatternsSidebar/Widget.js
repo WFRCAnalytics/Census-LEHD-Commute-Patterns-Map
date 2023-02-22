@@ -742,8 +742,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             _sNumLayerName     = slvsCTNumberLayerName   ;
             _sPercentLayerName = slvsCTPercentLayerName;
           }
-          //console.log("snumlayername is: " + _sNumLayerName);
-          //console.log("spercentlayername is: " + _sPercentLayerName);
         }
 
       }
@@ -771,7 +769,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         if (curTab == "LEHDVSL"){
           if (curCDisplay == 'num') {
             lyrCurrentDisplay = lyrNum;
-            console.log('num selected');
           } else if (curCDisplay == 'percent') {
             lyrCurrentDisplay = lyrPerc;
           }
@@ -784,7 +781,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             lyrCurrentDisplay = lyrSAPercent;
           }
         }
-        console.log("curDisplay is: " + curDisplay + " and curCDisplay is: " + curCDisplay);
         lyrCurrentDisplay.show();
         this.setupClassBreaks();
         this.setupLayerRenderingAndLabels();
@@ -1042,8 +1038,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           var feature, featureId;
           
           //QueryTask returns a featureSet.  Loop through features in the featureSet and add them to the map.
-          console.log("feature set -->");
-          console.log(featureSet.features);
           if (featureSet.features.length>0) {
             if (featureSet.features[0].geometry.type == "polyline" || featureSet.features[0].geometry.type == "polygon") {
               //clearing any graphics if present. 
@@ -1169,8 +1163,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       var defaultLine =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, Color.fromHex(sCDefaultGrey), dLineWidth3);
 
       for (var i=0;i<dCategoryOptions.length;i++) { //store values in order CategoryOptions
-        console.log("classbreaks.length is : " + classbreaks.length);
-        console.log(classbreaks);
+
         for (var j=0; j<classbreaks.length; j++) {
 
           if (dCategoryOptions[i].value==classbreaks[j].categoryCode) { //ensure classbreaks matches SECat position
@@ -1183,9 +1176,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             for (var k=0; k<dDisplayOpts.length;k++) { // Totals and Percent
               
               _dvn = dDisplayOpts[k].value; //Totals and Percent
-              console.log("_DVN ----------------------");
-              console.log(_dvn);
-              console.log("bigin color is " + classbreaks[j][_dvn].beginColor);
+
               _aBreaks = [];
               _bBreaks = [];
               _iBreakMin = 0;
@@ -1236,8 +1227,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
               aClassBreaks.push(_aClassBreaks);
             }
           }
-          console.log("aclassbreaks");
-          console.log(aClassBreaks);
+
         }
       }
 
@@ -1250,14 +1240,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
       _curCPos = sidebar.getCurCategoryPos();
       _curDPos  = this.getCurDisplayPos();
-      console.log("curCPos is: " + _curCPos);
-      console.log("curDPos is: " + _curDPos);
 
       //Set up layer rendering
       aRndr = [];
       aRndr = new ClassBreaksRenderer(null, sidebar.getCurDisplayFieldName());
-      console.log("aclassbreaks -->");
-      console.log(aClassBreaks);
 
       if (curTab == "LEHDVSL"){
         if (bClassBreaks.length>0) {
@@ -1388,7 +1374,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       dom.byId("dDisplay").style.display = 'none';
       dom.byId("cDisplay").style.display = '';
   
-      sidebar.setupClassBreaks();
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
       sidebar.updateDisplayLayer();
