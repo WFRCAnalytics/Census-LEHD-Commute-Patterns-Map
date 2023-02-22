@@ -17,7 +17,13 @@ var dDisplayOptions = [
   { label: "Share within each zone"              , name: "Share of People in Zone", value: "percent_mu", labeltype: 'percent'                 }
 ];
 
+var dCDisplayOptions = [
+  { label: "Absolute Change"       , name: "Absolute Change"  , value: "num"       , labeltype: 'number' , selected: true },
+  { label: "Percent Change"        , name: "Percent Change"   , value: "percent"   , labeltype: 'percent'              },
+];
+
 sDefaultDisplay = "number"; //must be same as "selected" above
+scDefaultDisplay = "num";   //must be same as "selected" above
 
 var dMapUnitOptions = [
   { label: "City level"                 , name: "City"                 , name_plural: "Cities"                , value: "city"      , fieldname: "CODE3"    , minScaleForLabels: 3000000, selected: true },
@@ -38,11 +44,14 @@ var sidebar; //sidebar widget
 var curCategory   = '';
 var curArea       = '';
 var curDisplay    = '';
+var curCDisplay   = '';
 var curTAZ        =  0;
 var lyrAreas;
 var lyrNumber;
 var lyrSAPercent;      //Layer for selected area distribution percents
 var lyrMUPercent;      //Layer for map unit distribution percents
+var lyrNum;            //Layer for number difference
+var lyrPerc;           //Layer for percent difference
 var lyrCurrentDisplay; //current layer being displayed (either lyrNumber or lyrPercent)
 
 var sAreasLayerName       = "Municipalities and Townships";
@@ -73,6 +82,15 @@ var slSDPercentSALayerName = "SL SD CommutePatterns Percent SelectedArea";
 var slCTNumberLayerName    = "SL City CommutePatterns Number";
 var slCTPercentMULayerName = "SL City CommutePatterns Percent MapUnit";
 var slCTPercentSALayerName = "SL City CommutePatterns Percent SelectedArea";
+
+var slvsBGNumberLayerName  = "LEHDVSL BlockGroup CommutePatterns Number"
+var slvsBGPercentLayerName = "LEHDVSL BlockGroup CommutePatterns PercDiff"
+var slvsTCNumberLayerName  = "LEHDVSL Tract CommutePatterns Number"
+var slvsTCPercentLayerName = "LEHDVSL Tract CommutePatterns PercDiff"
+var slvsSDNumberLayerName  = "LEHDVSL SD CommutePatterns Number"
+var slvsSDPercentLayerName = "LEHDVSL SD CommutePatterns PercDiff"
+var slvsCTNumberLayerName  = "LEHDVSL City CommutePatterns Number"
+var slvsCTPercentLayerName = "LEHDVSL City CommutePatterns PercDiff"
 
 
 var layerInfosObject;
@@ -191,18 +209,32 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           }
         }
       } else {
-        for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
-          var currentLayerInfo = layerInfosObject._layerInfos[j];    
-          if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
-            lyrAreas = layerInfosObject._layerInfos[j].layerObject;
-          } else if (currentLayerInfo.title == slCTNumberLayerName) {
-            lyrNumber = layerInfosObject._layerInfos[j].layerObject;
-          } else if (currentLayerInfo.title == slCTPercentMULayerName) {
-            lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
-          } else if (currentLayerInfo.title == slCTPercentSALayerName) {
-            lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+        if (curTab == "SL"){
+          for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
+            var currentLayerInfo = layerInfosObject._layerInfos[j];    
+            if (currentLayerInfo.title == sAreasLayerName) { //must mach layer title
+              lyrAreas = layerInfosObject._layerInfos[j].layerObject;
+            } else if (currentLayerInfo.title == slCTNumberLayerName) {
+              lyrNumber = layerInfosObject._layerInfos[j].layerObject;
+            } else if (currentLayerInfo.title == slCTPercentMULayerName) {
+              lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
+            } else if (currentLayerInfo.title == slCTPercentSALayerName) {
+              lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+            }
+          }
+        } else{
+          for (var j=0, jl=layerInforsObject._layerInfos.length; j<jl; j++) {
+            var currentLayerInfo = layersInfosObject._layerInfos[j];
+            if (currentLayerInfo.title == sAreasLayerName) {//must mach layer title
+              lyrAreas = layerInfosObject._layerInfos[j].layerObject;
+            } else if (currentLayerInfo.title == slvsCTNumberLayerName) {
+              lyrNum = layerInfosObject._layerInfos[j].layerObject;
+            } else if (currentLayerInfo.title == slvsCTPercentLayerName) {
+              lyrPerc = layerInfosObject._layerInfos[j].layerObject;
+            }
           }
         }
+
       }
 
 
@@ -361,6 +393,19 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         }, "cmbDisplay");
       curDisplay = sDefaultDisplay;
       cmbDisplay.startup();
+
+      cmbCDisplay= new Select({
+        id: "selectCDisplay",
+        name: "selectCDisplayName",
+        options: dCDisplayOptions,
+        onChange: function(){
+            curCDisplay = this.value;
+            parent.setLegendBar();
+            parent.updateDisplayLayer();
+        }
+      }, "cmbCDisplay");
+      curCDisplay = scDefaultDisplay;
+      cmbCDisplay.startup();
 
       cmbMapUnit = new Select({
         id: "selectMapUnit",
@@ -541,28 +586,28 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     getCurAreaName: function() {
-      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
       var _curAreaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       return _curAreaName[0]['label'];
     },
 
     getAreaNameFromCode: function(code3) {
-      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
       var _areaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==code3);} );
       return _areaName[0]['label'];
     },
 
     getCurAreaResidents: function() {
-      var suffix = (curTab == "LEHD") ? fnWorkWhoLiveInSuffix: flWorkWhoLiveInSuffix
-      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
+      var suffix = (curTab == "SL") ? flWorkWhoLiveInSuffix: fnWorkWhoLiveInSuffix;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
       var _curAreaResidents = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaResidents[0]['people'+ suffix]/100)*100;
     },
 
     getCurAreaWorkers: function() {
-      var suffix = (curTab == "LEHD") ? fnLiveWhoWorkInSuffix: flLiveWhoWorkInSuffix
-      var areaOptions = (curTab == "LEHD") ? dAreaOptions: dSLAreaOptions
+      var suffix = (curTab == "SL") ? flLiveWhoWorkInSuffix: fnLiveWhoWorkInSuffix;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
       var _curAreaWorkers = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaWorkers[0]['people'+ suffix]/100)*100;
@@ -571,16 +616,16 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     getCurSuffix: function() {
       var _curSuffix = '';
       if (curCategory == 'work_who_live_in') {
-        if (curTab == "LEHD"){
-          _curSuffix = fnWorkWhoLiveInSuffix;
-        } else{
+        if (curTab == "SL"){
           _curSuffix = flWorkWhoLiveInSuffix;
+        } else{
+          _curSuffix = fnWorkWhoLiveInSuffix;
         }
       } else if (curCategory == 'live_who_work_in') {
-        if (curTab == "LEHD"){
-          _curSuffix = fnLiveWhoWorkInSuffix;
-        } else{
+        if (curTab == "SL"){
           _curSuffix = flLiveWhoWorkInSuffix;
+        } else{
+          _curSuffix = fnLiveWhoWorkInSuffix;
         }
       }
       return _curSuffix;
@@ -606,6 +651,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             currentLayerInfo.title == sCTNumberLayerName    ||
             currentLayerInfo.title == sCTPercentMULayerName ||
             currentLayerInfo.title == sCTPercentSALayerName ||
+
             currentLayerInfo.title == slBGNumberLayerName   ||
             currentLayerInfo.title == slBGPercentMULayerName||
             currentLayerInfo.title == slBGPercentSALayerName||
@@ -617,7 +663,16 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             currentLayerInfo.title == slSDPercentSALayerName||
             currentLayerInfo.title == slCTNumberLayerName   ||
             currentLayerInfo.title == slCTPercentMULayerName||
-            currentLayerInfo.title == slCTPercentSALayerName) {
+            currentLayerInfo.title == slCTPercentSALayerName||
+
+            currentLayerInfo.title == slvsBGNumberLayerName ||
+            currentLayerInfo.title == slvsBGPercentLayerName||
+            currentLayerInfo.title == slvsTCNumberLayerName ||
+            currentLayerInfo.title == slvsTCPercentLayerName||
+            currentLayerInfo.title == slvsSDNumberLayerName ||
+            currentLayerInfo.title == slvsSDPercentLayerName||
+            currentLayerInfo.title == slvsCTNumberLayerName ||
+            currentLayerInfo.title == slvsCTPercentLayerName) {
           _lyr = layerInfosObject._layerInfos[j].layerObject;
           _lyr.hide();
         }
@@ -632,6 +687,8 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       var _sNumberLayerName    = "";
       var _sPercentSALayerName = "";
       var _sPercentMULayerName = "";
+      var _sNumLayerName       = "";
+      var _sPercentLayerName   = "";
 
       if (curTab == "LEHD"){
         if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
@@ -652,44 +709,81 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           _sPercentMULayerName = sCTPercentMULayerName;
         }
       } else{
-        if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
-          _sNumberLayerName    = slBGNumberLayerName   ;
-          _sPercentSALayerName = slBGPercentSALayerName;
-          _sPercentMULayerName = slBGPercentMULayerName;
-        } else if (curMapUnit == 'tract') {
-          _sNumberLayerName    = slTCNumberLayerName   ;
-          _sPercentSALayerName = slTCPercentSALayerName;
-          _sPercentMULayerName = slTCPercentMULayerName;
-        } else if (curMapUnit == 'sd') {
-          _sNumberLayerName    = slSDNumberLayerName   ;
-          _sPercentSALayerName = slSDPercentSALayerName;
-          _sPercentMULayerName = slSDPercentMULayerName;
-        } else if (curMapUnit == 'city') {
-          _sNumberLayerName    = slCTNumberLayerName   ;
-          _sPercentSALayerName = slCTPercentSALayerName;
-          _sPercentMULayerName = slCTPercentMULayerName;
+        if (curTab == "SL"){
+          if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
+            _sNumberLayerName    = slBGNumberLayerName   ;
+            _sPercentSALayerName = slBGPercentSALayerName;
+            _sPercentMULayerName = slBGPercentMULayerName;
+          } else if (curMapUnit == 'tract') {
+            _sNumberLayerName    = slTCNumberLayerName   ;
+            _sPercentSALayerName = slTCPercentSALayerName;
+            _sPercentMULayerName = slTCPercentMULayerName;
+          } else if (curMapUnit == 'sd') {
+            _sNumberLayerName    = slSDNumberLayerName   ;
+            _sPercentSALayerName = slSDPercentSALayerName;
+            _sPercentMULayerName = slSDPercentMULayerName;
+          } else if (curMapUnit == 'city') {
+            _sNumberLayerName    = slCTNumberLayerName   ;
+            _sPercentSALayerName = slCTPercentSALayerName;
+            _sPercentMULayerName = slCTPercentMULayerName;
+          }
+        } else {
+          if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
+            _sNumLayerName     = slvsBGNumberLayerName   ;
+            _sPercentLayerName = slvsBGPercentLayerName;
+          } else if (curMapUnit == 'tract') {
+            _sNumLayerName     = slvsTCNumberLayerName   ;
+            _sPercentLayerName = slvsTCPercentLayerName;
+          } else if (curMapUnit == 'sd') {
+            _sNumLayerName     = slvsSDNumberLayerName   ;
+            _sPercentLayerName = slvsSDPercentLayerName;
+          } else if (curMapUnit == 'city') {
+            _sNumLayerName     = slvsCTNumberLayerName   ;
+            _sPercentLayerName = slvsCTPercentLayerName;
+          }
+          //console.log("snumlayername is: " + _sNumLayerName);
+          //console.log("spercentlayername is: " + _sPercentLayerName);
         }
+
       }
       
       for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
-        var currentLayerInfo = layerInfosObject._layerInfos[j];    
-        if (currentLayerInfo.title == _sNumberLayerName) {
-          lyrNumber = layerInfosObject._layerInfos[j].layerObject;
-        } else if (currentLayerInfo.title == _sPercentSALayerName) {
-          lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
-        } else if (currentLayerInfo.title == _sPercentMULayerName) {
-          lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
-        }
+        var currentLayerInfo = layerInfosObject._layerInfos[j];
+        if (curTab == "LEHDVSL") {
+          if (currentLayerInfo.title == _sNumLayerName) {
+            lyrNum = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == _sPercentLayerName) {
+            lyrPerc = layerInfosObject._layerInfos[j].layerObject;
+          }
+        } else {
+          if (currentLayerInfo.title == _sNumberLayerName) {
+            lyrNumber = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == _sPercentSALayerName) {
+            lyrSAPercent = layerInfosObject._layerInfos[j].layerObject;
+          } else if (currentLayerInfo.title == _sPercentMULayerName) {
+            lyrMUPercent = layerInfosObject._layerInfos[j].layerObject;
+          } 
+        }   
       }
 
       if (curArea != '' && curCategory != '') {
-        if (curDisplay == 'number'){
-          lyrCurrentDisplay = lyrNumber;
-        } else if (curDisplay == 'percent_mu') {
-          lyrCurrentDisplay = lyrMUPercent;
-        } else if (curDisplay == 'percent_sa') {
-          lyrCurrentDisplay = lyrSAPercent;
+        if (curTab == "LEHDVSL"){
+          if (curCDisplay == 'num') {
+            lyrCurrentDisplay = lyrNum;
+            console.log('num selected');
+          } else if (curCDisplay == 'percent') {
+            lyrCurrentDisplay = lyrPerc;
+          }
+        } else {
+          if (curDisplay == 'number'){
+            lyrCurrentDisplay = lyrNumber;
+          } else if (curDisplay == 'percent_mu') {
+            lyrCurrentDisplay = lyrMUPercent;
+          } else if (curDisplay == 'percent_sa') {
+            lyrCurrentDisplay = lyrSAPercent;
+          }
         }
+        console.log("curDisplay is: " + curDisplay + " and curCDisplay is: " + curCDisplay);
         lyrCurrentDisplay.show();
         this.setupLayerRenderingAndLabels();
         this.checkLabel();
@@ -735,11 +829,12 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           //add ids to list of top tens for use in zooming
           toptenids.push(featureAttributes[dMapUnitOptions[sidebar.getCurMapUnitPos()].fieldname]);
         
+          var dDisplayOpts = (curTab == "LEHDVSL") ? dCDisplayOptions : dDisplayOptions;
           //get value of top ten results
           if (featureAttributes[sidebar.getCurDisplayFieldName()] != null) {
-            if (dDisplayOptions[sidebar.getCurDisplayPos()].labeltype == "number") {
+            if (dDisplayOpts[sidebar.getCurDisplayPos()].labeltype == "number") {
               _valuetext = sidebar.numberWithCommas(featureAttributes[sidebar.getCurDisplayFieldName()]);
-            } else if (dDisplayOptions[sidebar.getCurDisplayPos()].labeltype == "percent") {
+            } else if (dDisplayOpts[sidebar.getCurDisplayPos()].labeltype == "percent") {
               _valuetext = parseFloat(featureAttributes[sidebar.getCurDisplayFieldName()]).toFixed(1)+"%";
             }
           }
@@ -753,7 +848,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
           _html = _html + "<tr><td align=\"right\" width=\"25px;\">" + (i+1).toString() + ":</td><td width=\"125px;\">" + _displaytext + "</td><td width=\"75px;\" align=\"right\">" + _valuetext + "</td></tr></table>";
 
-          dom.byId("topten" + (i+1).toString()).innerHTML = _html;
+          dom.byId("topten" + (i+1).toString()).innerHTML = (curTab == "LEHDVSL") ? "": _html;
         }
         
         _displayname = dMapUnitOptions[sidebar.getCurMapUnitPos()].name_plural;
@@ -771,8 +866,8 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           _countystats = _countystats + "<hr/><p><strong>Where People Who Work in " + sidebar.getCurAreaName() + " Live by County*</strong></p><table width=\"330px;\">";
         }
         
-        dom.byId("toptentitle").innerHTML = "<hr/><p><strong>Top Ten " + _title + "</strong></p>";
-        dom.byId("areastats").innerHTML = _areaStatsHTML;
+        dom.byId("toptentitle").innerHTML = (curTab == "LEHDVSL") ? "": "<hr/><p><strong>Top Ten " + _title + "</strong></p>";
+        dom.byId("areastats").innerHTML = (curTab == "LEHDVSL") ? "": _areaStatsHTML;
 
         //Show County-Level Stats
 
@@ -784,14 +879,14 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           dData = (curTab == "LEHD") ? dCountyData_percent_mu: dSLCountyData_percent_mu;
           dom.byId("toptentitle").innerHTML = dom.byId("toptentitle").innerHTML + "<p><strong>(Share of People in Each City)</strong></p>"
           _countystats = _countystats + "<p><strong>(Share of People in Each County)</strong></p><table width=\"330px;\">";
-        }
+        } 
 
         var _weData   = dData.filter( function(dData){return (dData['WFCounty']=='Weber County');} );
         var _weNumber = _weData[0][sidebar.getCurDisplayFieldName()];
 
         if (curDisplay == 'number') {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Weber County</td><td width=\"75px;\" align=\"right\">" + sidebar.numberWithCommas(_weNumber) + "</td></tr></table></tr></td>";
-        } else  {
+        } else if (curDisplay == "percent_sa" || curDisplay == "percent_mu")  {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Weber County</td><td width=\"75px;\" align=\"right\">" + parseFloat(_weNumber).toFixed(1)+"%" + "</td></tr></table></tr></td>";          
         }
         
@@ -800,7 +895,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
         if (curDisplay == 'number') {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Davis County</td><td width=\"75px;\" align=\"right\">" + sidebar.numberWithCommas(_daNumber) +"</td></tr></table></tr></td>";
-        } else  {
+        } else if (curDisplay == "percent_sa" || curDisplay == "percent_mu")  {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Davis County</td><td width=\"75px;\" align=\"right\">" + parseFloat(_daNumber).toFixed(1)+"%" + "</td></tr></table></tr></td>";          
         }
 
@@ -809,7 +904,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
         if (curDisplay == 'number') {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Salt Lake County</td><td width=\"75px;\" align=\"right\">" + sidebar.numberWithCommas(_slNumber) + "</td></tr></table></tr></td>";
-        } else  {
+        } else if (curDisplay == "percent_sa" || curDisplay == "percent_mu")  {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Salt Lake County</td><td width=\"75px;\" align=\"right\">" + parseFloat(_slNumber).toFixed(1)+"%" + "</td></tr></table></tr></td>";          
         }
 
@@ -818,7 +913,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
         if (curDisplay == 'number') {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Utah County</td><td width=\"75px;\" align=\"right\">" + sidebar.numberWithCommas(_utNumber) + "</td></tr></table></tr></td>";
-        } else  {
+        } else if (curDisplay == "percent_sa" || curDisplay == "percent_mu")  {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Utah County</td><td width=\"75px;\" align=\"right\">" + parseFloat(_utNumber).toFixed(1)+"%" + "</td></tr></table></tr></td>";          
         }
 
@@ -827,13 +922,13 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
         if (curDisplay == 'number') {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Other Counties</td><td width=\"75px;\" align=\"right\">" + sidebar.numberWithCommas(_owNumber) + "</td></tr></table></tr></td>";
-        } else  {
+        } else if (curDisplay == "percent_sa" || curDisplay == "percent_mu")  {
           _countystats = _countystats + "<tr><td><table width=\"225px;\"><tr><td align=\"left\" width=\"150px;\">Other Counties</td><td width=\"75px;\" align=\"right\">" + parseFloat(_owNumber).toFixed(1)+"%" + "</td></tr></table></tr></td>";          
         }
         
         _countystats = _countystats + "</table><small>*only includes incorporated portions of a county</small>"
 
-        dom.byId("countystats").innerHTML = _countystats;
+        dom.byId("countystats").innerHTML = (curTab == "LEHDVSL") ? "": _countystats;
       }
 
 
@@ -869,7 +964,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           _sLegendName = "Where People Who Work in " + sidebar.getCurAreaName() + " Live";
         }
 
-        _sLegendName = _sLegendName + "<br/>" + dDisplayOptions[_curDisplayPos].name;
+        _sLegendName = (curTab == "LEHDVSL") ? _sLegendName + "<br/>" + dCDisplayOptions[_curDisplayPos].name : _sLegendName + "<br/>" + dDisplayOptions[_curDisplayPos].name;
 
         var _sLegendHTML = "";
 
@@ -944,6 +1039,8 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           var feature, featureId;
           
           //QueryTask returns a featureSet.  Loop through features in the featureSet and add them to the map.
+          console.log("feature set -->");
+          console.log(featureSet.features);
           if (featureSet.features.length>0) {
             if (featureSet.features[0].geometry.type == "polyline" || featureSet.features[0].geometry.type == "polygon") {
               //clearing any graphics if present. 
@@ -1045,13 +1142,20 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
     getCurDisplayPos: function() {
       //https://stackoverflow.com/questions/36419195/how-can-i-get-the-index-from-a-json-object-with-value
-      var val = curDisplay
-      var index = dDisplayOptions.findIndex(function(item, i){
+      var val = (curTab == "LEHDVSL") ? curCDisplay: curDisplay;
+      var dDisplayOpts = (curTab == "LEHDVSL") ? dCDisplayOptions: dDisplayOptions;
+      var index = dDisplayOpts.findIndex(function(item, i){
         return item.value === val
       });
       return index;
     },
 
+// set up layer rendering
+var _renderer = new UniqueValueRenderer({
+  type: "unique-value",
+  valueExpression: _codeblock,
+  uniqueValueInfos: _aBreaks
+});
     getCurMapUnitPos: function() {
       //https://stackoverflow.com/questions/36419195/how-can-i-get-the-index-from-a-json-object-with-value
       var val = curMapUnit
@@ -1073,10 +1177,12 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
           if (dCategoryOptions[i].value==classbreaks[j].categoryCode) { //ensure classbreaks matches SECat position
           
             _aClassBreaks = [];
+
+            var dDisplayOpts = (curTab == "LEHDVSL") ? dCDisplayOptions : dDisplayOptions;
             
-            for (var k=0; k<dDisplayOptions.length;k++) { // Totals and Percent
+            for (var k=0; k<dDisplayOpts.length;k++) { // Totals and Percent
               
-              _dvn = dDisplayOptions[k].value; //Totals and Percent
+              _dvn = dDisplayOpts[k].value; //Totals and Percent
             
               _aBreaks = [];
               _iBreakMin = 0;
@@ -1127,11 +1233,15 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       console.log('setupLayerRenderingAndLabels');
       
       _curCPos = sidebar.getCurCategoryPos();
-      _curDPos  = sidebar.getCurDisplayPos();
+      _curDPos  = this.getCurDisplayPos();
+      console.log("curCPos is: " + _curCPos);
+      console.log("curDPos is: " + _curDPos);
 
       //Set up layer rendering
       aRndr = [];
       aRndr = new ClassBreaksRenderer(null, sidebar.getCurDisplayFieldName());
+      console.log("aclassbreaks -->");
+      console.log(aClassBreaks);
       if (aClassBreaks.length>0) {
         for (var l=0;l<aClassBreaks[_curCPos][_curDPos].length;l++) {
           aRndr.addBreak(aClassBreaks[_curCPos][_curDPos][l]);
@@ -1144,10 +1254,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         labelExpressionInfo: {expression: ""}
       })
       labelClassOff.symbol = volumeLabel;
-
-      if (dDisplayOptions[sidebar.getCurDisplayPos()].labeltype == 'number') {
+      
+      var dDisplayOpts = (curTab == "LEHDVSL") ? dCDisplayOptions : dDisplayOptions;
+      if (dDisplayOpts[sidebar.getCurDisplayPos()].labeltype == 'number') {
         _expression = 'Text($feature["' + sidebar.getCurDisplayFieldName() + '"], "#,###")';
-      } else if (dDisplayOptions[sidebar.getCurDisplayPos()].labeltype == 'percent') {
+      } else if (dDisplayOpts[sidebar.getCurDisplayPos()].labeltype == 'percent') {
         _expression = 'round($feature["' + sidebar.getCurDisplayFieldName() + '"],1) + "%"';
       }
 
@@ -1192,7 +1303,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     
       dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_blue.png')";
       dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png' )";
-      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'     )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'  )";
+
+      dom.byId("dDisplay").style.display = '';
+      dom.byId("cDisplay").style.display = 'none';
      
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
@@ -1216,7 +1330,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     
       dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_white.png')";
       dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_blue.png'   )";
-      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'      )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'   )";
+
+      dom.byId("dDisplay").style.display = '';
+      dom.byId("cDisplay").style.display = 'none';
     
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
@@ -1240,7 +1357,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       
       dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_white.png')";
       dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png'  )";
-      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_blue.png'       )";
+      dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_blue.png'    )";
+
+      dom.byId("dDisplay").style.display = 'none';
+      dom.byId("cDisplay").style.display = '';
   
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
