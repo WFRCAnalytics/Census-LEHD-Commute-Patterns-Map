@@ -8,7 +8,7 @@ var dCategoryOptions = [
   { label: "where Salt Lake City residents work"          , name: "Residents Work", value: "work_who_live_in", selected: true },
   { label: "where people who work in Salt Lake City live" , name: "Workers Live"  , value: "live_who_work_in"                 }
 ];
-``
+
 sDefaultCategory = "work_who_live_in"; //must be same as "selected" above
 
 var dDisplayOptions = [
@@ -133,6 +133,7 @@ var iPixelSelectionTolerance = 5;
 var classbreaks;
 var labelclass;
 var aClassBreaks = [];
+var bClassBreaks = [];
 var volumeLabel;
 
 var toptenids = [];
@@ -785,6 +786,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         }
         console.log("curDisplay is: " + curDisplay + " and curCDisplay is: " + curCDisplay);
         lyrCurrentDisplay.show();
+        this.setupClassBreaks();
         this.setupLayerRenderingAndLabels();
         this.checkLabel();
         this.updateAreaStats();
@@ -948,13 +950,14 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     
     setLegendBar: function() {
       console.log('setLegendBar');
-            
-      if (aClassBreaks.length>0) {
+      
+      var classBreaks = (curTab == "LEHDVSL") ? bClassBreaks : aClassBreaks;
+      if (classBreaks.length>0) {
         
         _curCategoryPos = this.getCurCategoryPos();
         _curDisplayPos  = this.getCurDisplayPos();
 
-        _numClasses = aClassBreaks[_curCategoryPos][_curDisplayPos].length;
+        _numClasses = classBreaks[_curCategoryPos][_curDisplayPos].length;
         
         _sLegendName = "";
 
@@ -969,7 +972,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         var _sLegendHTML = "";
 
         for (var i=0; i<_numClasses;i++) {
-          _sLegendHTML += "<td width=\"" + (1/_numClasses*100).toString() + "%\" style=\"background-color:" + aClassBreaks[_curCategoryPos][_curDisplayPos][i].symbol.color + "\">&nbsp;</td>";
+          _sLegendHTML += "<td width=\"" + (1/_numClasses*100).toString() + "%\" style=\"background-color:" + classBreaks[_curCategoryPos][_curDisplayPos][i].symbol.color + "\">&nbsp;</td>";
         }
         
         _sLegendHTML = "<table id=\"tableLegend\" width=\"330px;\">" +
@@ -1150,12 +1153,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       return index;
     },
 
-// set up layer rendering
-var _renderer = new UniqueValueRenderer({
-  type: "unique-value",
-  valueExpression: _codeblock,
-  uniqueValueInfos: _aBreaks
-});
+
     getCurMapUnitPos: function() {
       //https://stackoverflow.com/questions/36419195/how-can-i-get-the-index-from-a-json-object-with-value
       var val = curMapUnit
@@ -1171,20 +1169,25 @@ var _renderer = new UniqueValueRenderer({
       var defaultLine =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, Color.fromHex(sCDefaultGrey), dLineWidth3);
 
       for (var i=0;i<dCategoryOptions.length;i++) { //store values in order CategoryOptions
-
+        console.log("classbreaks.length is : " + classbreaks.length);
+        console.log(classbreaks);
         for (var j=0; j<classbreaks.length; j++) {
 
           if (dCategoryOptions[i].value==classbreaks[j].categoryCode) { //ensure classbreaks matches SECat position
-          
+
             _aClassBreaks = [];
+            _bClassBreaks = [];
 
             var dDisplayOpts = (curTab == "LEHDVSL") ? dCDisplayOptions : dDisplayOptions;
             
             for (var k=0; k<dDisplayOpts.length;k++) { // Totals and Percent
               
               _dvn = dDisplayOpts[k].value; //Totals and Percent
-            
+              console.log("_DVN ----------------------");
+              console.log(_dvn);
+              console.log("bigin color is " + classbreaks[j][_dvn].beginColor);
               _aBreaks = [];
+              _bBreaks = [];
               _iBreakMin = 0;
               _iBreakMax = 0;
               _sColor = "";
@@ -1206,22 +1209,35 @@ var _renderer = new UniqueValueRenderer({
                 } else {
                   _sLabel = "From " + sidebar.numberWithCommas(_iBreakMin) + " to " + sidebar.numberWithCommas(_iBreakMax) + classbreaks[j][_dvn].units;
                 }
-                  
-                _aBreaks.push({minValue: _iBreakMin, maxValue: _iBreakMax, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
+                if (_dvn == "percent" || _dvn == "num"){
+                  _bBreaks.push({minValue: _iBreakMin, maxValue: _iBreakMax, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
+                }  else{
+                  _aBreaks.push({minValue: _iBreakMin, maxValue: _iBreakMax, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
+                }
+                
               }
 
               //Max is the min of the last class
               _sLabel = "More than " + sidebar.numberWithCommas(_iBreakMax) + classbreaks[j][_dvn].units;
               _sColor = "#" + rainbow.colourAt(l+1);
-              
+                            
               //Last Class
-              _aBreaks.push({minValue: _iBreakMax, maxValue: Infinity, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
-
-              _aClassBreaks.push(_aBreaks);
+              if (_dvn == "percent" || _dvn == "num"){
+                _bBreaks.push({minValue: Number.NEGATIVE_INFINITY, maxValue: Infinity, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
+                _bClassBreaks.push(_bBreaks);
+              } else {
+                _aBreaks.push({minValue: _iBreakMax, maxValue: Infinity, symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, defaultLine, Color.fromHex(_sColor)), label: _sLabel});
+                _aClassBreaks.push(_aBreaks);
+              }
             }
-
-            aClassBreaks.push(_aClassBreaks);
+            if (_dvn == "percent" || _dvn == "num"){
+              bClassBreaks.push(_bClassBreaks);
+            } else{
+              aClassBreaks.push(_aClassBreaks);
+            }
           }
+          console.log("aclassbreaks");
+          console.log(aClassBreaks);
         }
       }
 
@@ -1242,11 +1258,21 @@ var _renderer = new UniqueValueRenderer({
       aRndr = new ClassBreaksRenderer(null, sidebar.getCurDisplayFieldName());
       console.log("aclassbreaks -->");
       console.log(aClassBreaks);
-      if (aClassBreaks.length>0) {
-        for (var l=0;l<aClassBreaks[_curCPos][_curDPos].length;l++) {
-          aRndr.addBreak(aClassBreaks[_curCPos][_curDPos][l]);
+
+      if (curTab == "LEHDVSL"){
+        if (bClassBreaks.length>0) {
+          for (var l=0;l<bClassBreaks[_curCPos][_curDPos].length;l++) {
+            aRndr.addBreak(bClassBreaks[_curCPos][_curDPos][l]);
+          }
+        }
+      } else{
+        if (aClassBreaks.length>0) {
+          for (var l=0;l<aClassBreaks[_curCPos][_curDPos].length;l++) {
+            aRndr.addBreak(aClassBreaks[_curCPos][_curDPos][l]);
+          }
         }
       }
+
       
       //Setup empty volume label class for when toggle is off
       labelClassOff = ({
@@ -1362,6 +1388,7 @@ var _renderer = new UniqueValueRenderer({
       dom.byId("dDisplay").style.display = 'none';
       dom.byId("cDisplay").style.display = '';
   
+      sidebar.setupClassBreaks();
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
       sidebar.updateDisplayLayer();
