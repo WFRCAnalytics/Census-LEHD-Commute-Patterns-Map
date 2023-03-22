@@ -32,10 +32,9 @@ var dMapUnitOptions = [
   { label: "Census Block Group level"   , name: "Census Block Group"   , name_plural: "Census Block Groups"   , value: "blockgroup", fieldname: "GEOID"    , minScaleForLabels:  150000                 }
 ];
 
+sMode = "BASIC";
 sDefaultMapUnit = "city"; 
-
 sDefaultArea = "SLC";
-
 sLegendName = "";
 
 //Variables
@@ -684,7 +683,18 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       console.log('updateDisplayLayer');
 
       this.hideAllDisplayLayers();
-      
+
+       // unhide chart area
+      //if (sMode=='BASIC') {
+      //  dom.byId('LEHD'    ).style.display = ''    ;
+      //  dom.byId('SL'      ).style.display = ''    ;
+      //  dom.byId('LEHDVSL' ).style.display = 'none';
+      //} else if (sMode=='ADVANCED') {
+      //  dom.byId('LEHD'   ).style.display = ''    ;
+      //  dom.byId('SL'     ).style.display = ''    ;
+      //  dom.byId('LEHDVSL').style.display = ''    ;
+      //}
+     
       var _sNumberLayerName    = "";
       var _sPercentSALayerName = "";
       var _sPercentMULayerName = "";
@@ -1304,7 +1314,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
   
       // LEHD is always absolute
       curAoP = 'absolute';
-  
+
       dom.byId("LEHD_CONTROL").classList.remove('unselectedToggle');
       dom.byId("LEHD_CONTROL").classList.add   (  'selectedToggle');
       dom.byId("SL_CONTROL"  ).classList.remove(  'selectedToggle');
@@ -1377,6 +1387,66 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
       sidebar.updateDisplayLayer();
+    },
+
+    _turnOnAdvanced: function(){
+      console.log('_turnOnAdvanced');
+
+      dom.byId("LEHDCELL").style.display = '';
+      dom.byId("SLCELL").style.display = '';
+      dom.byId("LEHDVSLCELL").style.display = '';
+  
+      sidebar.updateAreaSelection();
+      sidebar.zoomToArea();
+      sidebar.updateDisplayLayer();
+    },
+
+    _turnOnBasic: function(){
+      console.log('_turnOnBasic');
+
+      if(curTab=='LEHDVSL'){
+        curTab = "LEHD";
+  
+        // LEHD is always absolute
+        curAoP = 'absolute';
+  
+        dom.byId("LEHD_CONTROL").classList.remove('unselectedToggle');
+        dom.byId("LEHD_CONTROL").classList.add   (  'selectedToggle');
+        dom.byId("SL_CONTROL"  ).classList.remove(  'selectedToggle');
+        dom.byId("SL_CONTROL"  ).classList.add   ('unselectedToggle');
+      
+        dom.byId("LEHDVSL_CONTROL").classList.remove(  'selectedToggle');
+        dom.byId("LEHDVSL_CONTROL").classList.add   ('unselectedToggle');
+      
+        dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_blue.png')";
+        dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png' )";
+        dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'  )";
+  
+        dom.byId("dDisplay").style.display = '';
+        dom.byId("cDisplay").style.display = 'none';
+      }
+
+      dom.byId("LEHDCELL").style.display = '';
+      dom.byId("SLCELL").style.display = '';
+      dom.byId("LEHDVSLCELL").style.display = 'none';
+  
+      sidebar.updateAreaSelection();
+      sidebar.zoomToArea();
+      sidebar.updateDisplayLayer();
+  
+    },
+
+    //Run onOpen when receiving a message from OremLayerSymbology
+    onReceiveData: function(name, widgetId, data, historyData) {
+      console.log('onReceiveData');
+  
+      if (data.message=="TurnOnAdvanced") {
+        sMode="ADVANCED";
+        this._turnOnAdvanced(); 
+      } else if(data.message=="TurnOnBasic") {
+        sMode="BASIC";
+        this._turnOnBasic();
+      }
     },
     
     onOpen: function(){
