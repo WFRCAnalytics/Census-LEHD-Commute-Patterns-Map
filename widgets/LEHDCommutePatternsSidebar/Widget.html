@@ -6,7 +6,7 @@
           <td id="LEHDCELL" width="33%;">
             <div id="LEHD_CONTROL" class=  "selectedWidget" style="padding-top: 5px;" data-dojo-attach-event="onClick: _selectLEHD"><div id="LEHD_ICON" class="pictureLEHD"><div class="tabcontrol">LEHD            </div></div></div>
           </td>
-          <td id="SLCELL" width="33%;">
+          <td id="SLCELL" width="33%;" style="display: none;">
             <div id="SL_CONTROL"   class="unselectedWidget" style="padding-top: 5px;" data-dojo-attach-event="onClick: _selectSL">  <div id="SL_ICON"   class="pictureSL"  ><div class="tabcontrol">StreetLight              </div></div></div>
           </td>
           <td id="LEHDVSLCELL" width="33%;" style="display: none;">
@@ -18,6 +18,15 @@
   </div>
   <br/>
   <table width="330px;">
+    <tr>
+      <td>
+        <div class="thicker" style="display: inline; line-height: 100%;" >Data<br/>Year</div>
+      </td>
+      <td colspan="2"><div class="thicker" style="display: inline; line-height: 200%;" ></div><div style="display: inline" id="divYearOptions" data-dojo-type="dojox.form.Select"></div></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
     <tr>
       <td width="40px;">
         <div class="thicker" style="display: inline; line-height: 200%;" >For </div>

@@ -4,6 +4,12 @@
 
 var curTab = "LEHD"; //Options: LEHD, SL, LEHDVSL
 
+var dYearOptions = [
+  {value: "2018" , label:"2018"},
+  {value: "2019" , label:"2019"}
+];
+var curYearOption     = "2019";
+
 var dCategoryOptions = [
   { label: "where Salt Lake City residents work"          , name: "Residents Work", value: "work_who_live_in", selected: true },
   { label: "where people who work in Salt Lake City live" , name: "Workers Live"  , value: "live_who_work_in"                 }
@@ -33,6 +39,7 @@ var dMapUnitOptions = [
 ];
 
 sMode = "BASIC";
+sDefaultYear = "2019";
 sDefaultMapUnit = "city"; 
 sDefaultArea = "SLC";
 sLegendName = "";
@@ -155,8 +162,10 @@ define(['dojo/_base/declare',
     'esri/geometry/Extent',
     'dijit/form/Select',
     'dojox/charting/axis2d/Default',
-    'dojo/domReady!'],
-function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerInfos, Query, QueryTask, SimpleFillSymbol, SimpleLineSymbol, TextSymbol, Font, Color, ClassBreaksRenderer, Extent, Select) {
+    'dojo/domReady!',
+    'dijit/form/RadioButton'
+  ],
+function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerInfos, Query, QueryTask, SimpleFillSymbol, SimpleLineSymbol, TextSymbol, Font, Color, ClassBreaksRenderer, Extent, Select, RadioButton) {
   //To create a widget, you need to derive from BaseWidget.
   
   return declare([BaseWidget], {
@@ -367,6 +376,20 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
                 or if the request was unsuccessful altogether. */
         }
       });
+
+      cmbYear = new Select({
+        id: "selectYear",
+        name: "selectYearName",
+        options: dYearOptions,
+        onChange: function(){
+          curYearOption = this.value;
+            parent.setLegendBar();
+            parent.updateDisplayLayer();
+            parent.updateAreaSelection();
+        }
+        }, "divYearOptions");
+      curYearOption = sDefaultYear;
+      cmbYear.startup();
 
       cmbCategory = new Select({
         id: "selectCategory",
@@ -1427,7 +1450,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       }
 
       dom.byId("LEHDCELL").style.display = '';
-      dom.byId("SLCELL").style.display = '';
+      dom.byId("SLCELL").style.display = 'none';
       dom.byId("LEHDVSLCELL").style.display = 'none';
   
       sidebar.updateAreaSelection();
