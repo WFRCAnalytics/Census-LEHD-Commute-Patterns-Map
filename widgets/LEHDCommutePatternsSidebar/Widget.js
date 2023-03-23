@@ -47,6 +47,7 @@ sLegendName = "";
 //Variables
 var sidebar; //sidebar widget
 
+var dAreaOptions = [];
 var curCategory   = '';
 var curArea       = '';
 var curDisplay    = '';
@@ -608,11 +609,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
 
     setupAreaDropDown: function() {
-      //var dAreaOptions = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions19;
+      var dAreaOptionsP = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
       cmbArea = new Select({
         id: "selectArea",
         name: "selectAreaName",
-        options: dAreaOptions,
+        options: dAreaOptionsP,
         selected: curArea,
         onChange: function(){
             curArea = this.value;
