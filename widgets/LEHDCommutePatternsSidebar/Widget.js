@@ -286,7 +286,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('citytownshipdata.json');
             dAreaOptions18 = obj;
-            parent.setupAreaDropDown();
+            parent.setupAreaDropDown(dAreaOptions18);
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -300,7 +300,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('citytownshipdata.json');
             dAreaOptions = obj;
-            parent.setupAreaDropDown();
+            parent.setupAreaDropDown(dAreaOptions);
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -314,7 +314,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('citytownshipdata.json');
             dSLAreaOptions = obj;
-            parent.setupAreaDropDown();
+            parent.setupAreaDropDown(dSLAreaOptions);
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -607,12 +607,11 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
 
-    setupAreaDropDown: function() {
-      //var dAreaOptions = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions19;
+    setupAreaDropDown: function(areaOptions) {
       cmbArea = new Select({
         id: "selectArea",
         name: "selectAreaName",
-        options: dAreaOptions,
+        options: areaOptions,
         selected: curArea,
         onChange: function(){
             curArea = this.value;
