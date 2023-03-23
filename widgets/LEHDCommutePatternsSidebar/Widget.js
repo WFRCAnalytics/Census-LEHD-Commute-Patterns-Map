@@ -6,7 +6,7 @@ var curTab = "LEHD"; //Options: LEHD, SL, LEHDVSL
 
 var dYearOptions = [
   {value: "2018" , label:"2018"},
-  {value: "2019" , label:"2019"}
+  {value: "2019" , label:"2019", selected: true}
 ];
 var curYearOption     = "2019";
 
@@ -63,18 +63,31 @@ var lyrCurrentDisplay; //current layer being displayed (either lyrNumber or lyrP
 var sAreasLayerName       = "Municipalities and Townships";
 var sAreasLayerNameCounty = "Counties";
 
-var sBGNumberLayerName    = "LEHD BlockGroup CommutePatterns Number";
-var sBGPercentMULayerName = "LEHD BlockGroup CommutePatterns Percent MapUnit";
-var sBGPercentSALayerName = "LEHD BlockGroup CommutePatterns Percent SelectedArea";
-var sTCNumberLayerName    = "LEHD Tract CommutePatterns Number";
-var sTCPercentMULayerName = "LEHD Tract CommutePatterns Percent MapUnit";
-var sTCPercentSALayerName = "LEHD Tract CommutePatterns Percent SelectedArea";
-var sSDNumberLayerName    = "LEHD SD CommutePatterns Number";
-var sSDPercentMULayerName = "LEHD SD CommutePatterns Percent MapUnit";
-var sSDPercentSALayerName = "LEHD SD CommutePatterns Percent SelectedArea";
-var sCTNumberLayerName    = "LEHD City CommutePatterns Number";
-var sCTPercentMULayerName = "LEHD City CommutePatterns Percent MapUnit";
-var sCTPercentSALayerName = "LEHD City CommutePatterns Percent SelectedArea";
+var sBGNumberLayerName2018    = "2018 LEHD BlockGroup CommutePatterns Number";
+var sBGPercentMULayerName2018 = "2018 LEHD BlockGroup CommutePatterns Percent MapUnit";
+var sBGPercentSALayerName2018 = "2018 LEHD BlockGroup CommutePatterns Percent SelectedArea";
+var sTCNumberLayerName2018    = "2018 LEHD Tract CommutePatterns Number";
+var sTCPercentMULayerName2018 = "2018 LEHD Tract CommutePatterns Percent MapUnit";
+var sTCPercentSALayerName2018 = "2018 LEHD Tract CommutePatterns Percent SelectedArea";
+var sSDNumberLayerName2018    = "2018 LEHD SD CommutePatterns Number";
+var sSDPercentMULayerName2018 = "2018 LEHD SD CommutePatterns Percent MapUnit";
+var sSDPercentSALayerName2018 = "2018 LEHD SD CommutePatterns Percent SelectedArea";
+var sCTNumberLayerName2018    = "2018 LEHD City CommutePatterns Number";
+var sCTPercentMULayerName2018 = "2018 LEHD City CommutePatterns Percent MapUnit";
+var sCTPercentSALayerName2018 = "2018 LEHD City CommutePatterns Percent SelectedArea";
+
+var sBGNumberLayerName2019    = "2019 LEHD BlockGroup CommutePatterns Number";
+var sBGPercentMULayerName2019 = "2019 LEHD BlockGroup CommutePatterns Percent MapUnit";
+var sBGPercentSALayerName2019 = "2019 LEHD BlockGroup CommutePatterns Percent SelectedArea";
+var sTCNumberLayerName2019    = "2019 LEHD Tract CommutePatterns Number";
+var sTCPercentMULayerName2019 = "2019 LEHD Tract CommutePatterns Percent MapUnit";
+var sTCPercentSALayerName2019 = "2019 LEHD Tract CommutePatterns Percent SelectedArea";
+var sSDNumberLayerName2019    = "2019 LEHD SD CommutePatterns Number";
+var sSDPercentMULayerName2019 = "2019 LEHD SD CommutePatterns Percent MapUnit";
+var sSDPercentSALayerName2019 = "2019 LEHD SD CommutePatterns Percent SelectedArea";
+var sCTNumberLayerName2019    = "2019 LEHD City CommutePatterns Number";
+var sCTPercentMULayerName2019 = "2019 LEHD City CommutePatterns Percent MapUnit";
+var sCTPercentSALayerName2019 = "2019 LEHD City CommutePatterns Percent SelectedArea";
 
 var slBGNumberLayerName    = "SL BlockGroup CommutePatterns Number";
 var slBGPercentMULayerName = "SL BlockGroup CommutePatterns Percent MapUnit";
@@ -201,6 +214,10 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       this.map.on("zoom-end", function (){  
         parent.changeZoom();  
       });
+
+      var sCTNumberLayerName    = (curYearOption == "2018") ? sCTNumberLayerName2018 : sCTNumberLayerName2019      
+      var sCTPercentMULayerName = (curYearOption == "2018") ? sCTPercentMULayerName2018 : sCTPercentMULayerName2019
+      var sCTPercentSALayerName = (curYearOption == "2018") ? sCTPercentSALayerName2018 : sCTPercentSALayerName2019
       
       //Initialize Selection Layer, FromLayer, and ToLayer and define selection colors
       layerInfosObject = LayerInfos.getInstanceSync();
@@ -383,11 +400,12 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         options: dYearOptions,
         onChange: function(){
           curYearOption = this.value;
-            parent.setLegendBar();
-            parent.updateDisplayLayer();
-            parent.updateAreaSelection();
+          console.log("current year is : " + curYearOption);
+          parent.setLegendBar();
+          parent.updateDisplayLayer();
+          parent.updateAreaSelection();
         }
-        }, "divYearOptions");
+        }, "cmbYear");
       curYearOption = sDefaultYear;
       cmbYear.startup();
 
@@ -662,18 +680,18 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
             
       for (var j=0, jl=layerInfosObject._layerInfos.length; j<jl; j++) {
         var currentLayerInfo = layerInfosObject._layerInfos[j];    
-        if (currentLayerInfo.title == sBGNumberLayerName    ||
-            currentLayerInfo.title == sBGPercentMULayerName ||
-            currentLayerInfo.title == sBGPercentSALayerName ||
-            currentLayerInfo.title == sTCNumberLayerName    ||
-            currentLayerInfo.title == sTCPercentMULayerName ||
-            currentLayerInfo.title == sTCPercentSALayerName ||
-            currentLayerInfo.title == sSDNumberLayerName    ||
-            currentLayerInfo.title == sSDPercentMULayerName ||
-            currentLayerInfo.title == sSDPercentSALayerName ||
-            currentLayerInfo.title == sCTNumberLayerName    ||
-            currentLayerInfo.title == sCTPercentMULayerName ||
-            currentLayerInfo.title == sCTPercentSALayerName ||
+        if (currentLayerInfo.title == sBGNumberLayerName2018    || currentLayerInfo.title == sBGNumberLayerName2019    ||
+            currentLayerInfo.title == sBGPercentMULayerName2018 || currentLayerInfo.title == sBGPercentMULayerName2019 ||
+            currentLayerInfo.title == sBGPercentSALayerName2018 || currentLayerInfo.title == sBGPercentSALayerName2019 ||
+            currentLayerInfo.title == sTCNumberLayerName2018    || currentLayerInfo.title == sTCNumberLayerName2019    ||
+            currentLayerInfo.title == sTCPercentMULayerName2018 || currentLayerInfo.title == sTCPercentMULayerName2019 ||
+            currentLayerInfo.title == sTCPercentSALayerName2018 || currentLayerInfo.title == sTCPercentSALayerName2019 ||
+            currentLayerInfo.title == sSDNumberLayerName2018    || currentLayerInfo.title == sSDNumberLayerName2019    ||
+            currentLayerInfo.title == sSDPercentMULayerName2018 || currentLayerInfo.title == sSDPercentMULayerName2019 ||
+            currentLayerInfo.title == sSDPercentSALayerName2018 || currentLayerInfo.title == sSDPercentSALayerName2019 ||
+            currentLayerInfo.title == sCTNumberLayerName2018    || currentLayerInfo.title == sCTNumberLayerName2019    ||
+            currentLayerInfo.title == sCTPercentMULayerName2018 || currentLayerInfo.title == sCTPercentMULayerName2019 ||
+            currentLayerInfo.title == sCTPercentSALayerName2018 || currentLayerInfo.title == sCTPercentSALayerName2019 ||
 
             currentLayerInfo.title == slBGNumberLayerName   ||
             currentLayerInfo.title == slBGPercentMULayerName||
@@ -706,26 +724,29 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       console.log('updateDisplayLayer');
 
       this.hideAllDisplayLayers();
-
-       // unhide chart area
-      //if (sMode=='BASIC') {
-      //  dom.byId('LEHD'    ).style.display = ''    ;
-      //  dom.byId('SL'      ).style.display = ''    ;
-      //  dom.byId('LEHDVSL' ).style.display = 'none';
-      //} else if (sMode=='ADVANCED') {
-      //  dom.byId('LEHD'   ).style.display = ''    ;
-      //  dom.byId('SL'     ).style.display = ''    ;
-      //  dom.byId('LEHDVSL').style.display = ''    ;
-      //}
-     
+    
       var _sNumberLayerName    = "";
       var _sPercentSALayerName = "";
       var _sPercentMULayerName = "";
       var _sNumLayerName       = "";
       var _sPercentLayerName   = "";
 
+      var sBGNumberLayerName    = (curYearOption == "2018") ? sBGNumberLayerName2018 : sBGNumberLayerName2019   
+      var sBGPercentMULayerName = (curYearOption == "2018") ? sBGPercentMULayerName2018 : sBGPercentMULayerName2019
+      var sBGPercentSALayerName = (curYearOption == "2018") ? sBGPercentSALayerName2018 : sBGPercentSALayerName2019
+      var sTCNumberLayerName    = (curYearOption == "2018") ? sTCNumberLayerName2018 : sTCNumberLayerName2019      
+      var sTCPercentMULayerName = (curYearOption == "2018") ? sTCPercentMULayerName2018 : sTCPercentMULayerName2019
+      var sTCPercentSALayerName = (curYearOption == "2018") ? sTCPercentSALayerName2018 : sTCPercentSALayerName2019
+      var sSDNumberLayerName    = (curYearOption == "2018") ? sSDNumberLayerName2018 : sSDNumberLayerName2019      
+      var sSDPercentMULayerName = (curYearOption == "2018") ? sSDPercentMULayerName2018 : sSDPercentMULayerName2019
+      var sSDPercentSALayerName = (curYearOption == "2018") ? sSDPercentSALayerName2018 : sSDPercentSALayerName2019
+      var sCTNumberLayerName    = (curYearOption == "2018") ? sCTNumberLayerName2018 : sCTNumberLayerName2019      
+      var sCTPercentMULayerName = (curYearOption == "2018") ? sCTPercentMULayerName2018 : sCTPercentMULayerName2019
+      var sCTPercentSALayerName = (curYearOption == "2018") ? sCTPercentSALayerName2018 : sCTPercentSALayerName2019
+
       if (curTab == "LEHD"){
         if (curMapUnit == 'blockgroup') { // add condition until other data for map units prepared
+          console.log("Checking big boys: " + curYearOption);
           _sNumberLayerName    = sBGNumberLayerName   ;
           _sPercentSALayerName = sBGPercentSALayerName;
           _sPercentMULayerName = sBGPercentMULayerName;
@@ -1414,10 +1435,13 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
     _turnOnAdvanced: function(){
       console.log('_turnOnAdvanced');
+      curYearOption = "2019";      
 
       dom.byId("LEHDCELL").style.display = '';
       dom.byId("SLCELL").style.display = '';
       dom.byId("LEHDVSLCELL").style.display = '';
+      dom.byId("yDisplay").style.display = 'none';
+      //dom.byId("ayDisplay").style.display = '';
   
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
@@ -1426,8 +1450,32 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
     _turnOnBasic: function(){
       console.log('_turnOnBasic');
+      cmbYear.set('value',"2019");
+      curYearOption = "2019";
+      cmbYear.startup();
 
       if(curTab=='LEHDVSL'){
+        curTab = "LEHD";
+  
+        // LEHD is always absolute
+        curAoP = 'absolute';
+  
+        dom.byId("LEHD_CONTROL").classList.remove('unselectedToggle');
+        dom.byId("LEHD_CONTROL").classList.add   (  'selectedToggle');
+        dom.byId("SL_CONTROL"  ).classList.remove(  'selectedToggle');
+        dom.byId("SL_CONTROL"  ).classList.add   ('unselectedToggle');
+      
+        dom.byId("LEHDVSL_CONTROL").classList.remove(  'selectedToggle');
+        dom.byId("LEHDVSL_CONTROL").classList.add   ('unselectedToggle');
+      
+        dom.byId("LEHD_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_forecast_blue.png')";
+        dom.byId("SL_ICON"  ).style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_change_white.png' )";
+        dom.byId("LEHDVSL_ICON").style.backgroundImage = "url('widgets/LEHDCommutePatternsSidebar/images/icon_vs_white.png'  )";
+  
+        dom.byId("dDisplay").style.display = '';
+        dom.byId("cDisplay").style.display = 'none';
+      }
+      if(curTab=='SL'){
         curTab = "LEHD";
   
         // LEHD is always absolute
@@ -1452,6 +1500,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       dom.byId("LEHDCELL").style.display = '';
       dom.byId("SLCELL").style.display = 'none';
       dom.byId("LEHDVSLCELL").style.display = 'none';
+      dom.byId("yDisplay").style.display = '';
   
       sidebar.updateAreaSelection();
       sidebar.zoomToArea();
