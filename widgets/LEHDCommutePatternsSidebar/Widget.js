@@ -47,6 +47,7 @@ sLegendName = "";
 //Variables
 var sidebar; //sidebar widget
 
+var dAreaOptions = [];
 var curCategory   = '';
 var curArea       = '';
 var curDisplay    = '';
