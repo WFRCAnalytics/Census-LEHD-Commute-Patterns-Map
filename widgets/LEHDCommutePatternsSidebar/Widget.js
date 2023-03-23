@@ -263,8 +263,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       }
 
-
-
       //Populate BinData Object
       dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/bindata.json",
@@ -281,6 +279,20 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
       });
 
       //Populate AreaData Object
+      dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2018/lehd_citytownshipdata.json", //update this to get the sl data when sl data is selected
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('citytownshipdata.json');
+            dAreaOptions18 = obj;
+            parent.setupAreaDropDown();
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
       dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_citytownshipdata.json", //update this to get the sl data when sl data is selected
         handleAs: "json",
@@ -312,12 +324,25 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       //Populate CountyData Object
       dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2018/lehd_countydata_number.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_number.json');
+            dCountyData_number18 = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
+      dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_number.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('countydata_number.json');
-            dCountyData_number = obj;
+            dCountyData_number19 = obj;
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -340,12 +365,25 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       //Populate CountyData Object
       dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2018/lehd_countydata_percent_sa.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_percent_sa.json');
+            dCountyData_percent_sa18 = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
+      dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_percent_sa.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('countydata_percent_sa.json');
-            dCountyData_percent_sa = obj;
+            dCountyData_percent_sa19 = obj;
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -368,12 +406,25 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
       //Populate CountyData Object
       dojo.xhrGet({
+        url: "widgets/LEHDCommutePatternsSidebar/data/data2018/lehd_countydata_percent_mu.json",
+        handleAs: "json",
+        load: function(obj) {
+            /* here, obj will already be a JS object deserialized from the JSON response */
+            console.log('countydata_percent_mu.json');
+            dCountyData_percent_mu18 = obj;
+        },
+        error: function(err) {
+            /* this will execute if the response couldn't be converted to a JS object,
+                or if the request was unsuccessful altogether. */
+        }
+      });
+      dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/data2019/lehd_countydata_percent_mu.json",
         handleAs: "json",
         load: function(obj) {
             /* here, obj will already be a JS object deserialized from the JSON response */
             console.log('countydata_percent_mu.json');
-            dCountyData_percent_mu = obj;
+            dCountyData_percent_mu19 = obj;
         },
         error: function(err) {
             /* this will execute if the response couldn't be converted to a JS object,
@@ -557,7 +608,7 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
 
     setupAreaDropDown: function() {
-
+      //var dAreaOptions = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions19;
       cmbArea = new Select({
         id: "selectArea",
         name: "selectAreaName",
@@ -627,20 +678,23 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
     },
 
     getCurAreaName: function() {
-      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
+      var dAreaOptionsP = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptionsP;
       var _curAreaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       return _curAreaName[0]['label'];
     },
 
     getAreaNameFromCode: function(code3) {
-      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
+      var dAreaOptionsP = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptionsP;
       var _areaName = areaOptions.filter( function(areaOptions){return (areaOptions['value']==code3);} );
       return _areaName[0]['label'];
     },
 
     getCurAreaResidents: function() {
       var suffix = (curTab == "SL") ? flWorkWhoLiveInSuffix: fnWorkWhoLiveInSuffix;
-      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
+      var dAreaOptionsP = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptionsP;
       var _curAreaResidents = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaResidents[0]['people'+ suffix]/100)*100;
@@ -648,7 +702,8 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
 
     getCurAreaWorkers: function() {
       var suffix = (curTab == "SL") ? flLiveWhoWorkInSuffix: fnLiveWhoWorkInSuffix;
-      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptions;
+      var dAreaOptionsP = (curYearOption == "2018") ? dAreaOptions18: dAreaOptions;
+      var areaOptions = (curTab == "SL") ? dSLAreaOptions: dAreaOptionsP;
       var _curAreaWorkers = areaOptions.filter( function(areaOptions){return (areaOptions['value']==curArea);} );
       //return rounded value up to next 100
       return Math.ceil(_curAreaWorkers[0]['people'+ suffix]/100)*100;
@@ -922,7 +977,9 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         dom.byId("areastats").innerHTML = (curTab == "LEHDVSL") ? "": _areaStatsHTML;
 
         //Show County-Level Stats
-
+        var dCountyData_percent_mu = (curYearOption == "2018") ? dCountyData_percent_mu18 : dCountyData_percent_mu19;
+        var dCountyData_percent_sa = (curYearOption == "2018") ? dCountyData_percent_sa18 : dCountyData_percent_sa19;
+        var dCountyData_number = (curYearOption == "2018") ? dCountyData_number18 : dCountyData_number19;
         if (curDisplay == 'number') {
           dData = (curTab == "LEHD") ? dCountyData_number: dSLCountyData_number;
         } else if (curDisplay == 'percent_sa') {
