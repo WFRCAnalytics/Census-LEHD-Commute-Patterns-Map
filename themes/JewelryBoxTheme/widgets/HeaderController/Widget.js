@@ -14,8 +14,12 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 
+var sViewAdvanced = "<p style=\"color:white\">View Advanced Version</p>";
+var sViewBasic = "<p style=\"color:white\">View Basic Version</p>";
+
 define([
     'dojo/_base/declare',
+    'dojo/dom',
     'dojo/_base/lang',
     'dojo/_base/array',
     'dojo/_base/html',
@@ -38,7 +42,7 @@ define([
     './PopupTileNodes',
     'dojo/NodeList-manipulate'
   ],
-  function(declare, lang, array, html, aspect, query, on, keys, Tooltip, Deferred, mouse,
+  function(declare, dom, lang, array, html, aspect, query, on, keys, Tooltip, Deferred, mouse,
     domConstruct, domGeometry, BaseWidget, PoolControllerMixin, tokenUtils, portalUtils,
     portalUrlUtils, utils, Message, PopupTileNodes) {
     /* global jimuConfig */
@@ -62,6 +66,26 @@ define([
       openedId: '',
 
       moveTopOnActive: false,
+
+      //Begin Added by CD 2023-03-22
+      _advanced: function() {
+        console.log('_advanced');
+        
+        if (dom.byId("advanced").innerHTML==sViewAdvanced) {
+          this.publishData({
+            message: "TurnOnAdvanced"
+          });
+          dom.byId("advanced").innerHTML = sViewBasic;
+        } else if(dom.byId("advanced").innerHTML==sViewBasic) {
+          this.publishData({
+            message: "TurnOnBasic"
+          });
+          dom.byId("advanced").innerHTML = sViewAdvanced;
+        }
+
+      },
+      //End Added by CD 2023-03-22
+
 
       postMixInProperties: function() {
         this.inherited(arguments);
@@ -125,6 +149,9 @@ define([
         this.inherited(arguments);
         this.resize();
         setTimeout(lang.hitch(this, this.resize), 100);
+
+        //ADDED BY CD 2023-03-22
+        dom.byId("advanced").innerHTML = sViewAdvanced;
       },
 
       onAction: function(action, data) {

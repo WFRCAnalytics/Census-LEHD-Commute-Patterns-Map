@@ -4,6 +4,113 @@
   width: 323px;
 }
 
+div.selectedWidget {
+    cursor: pointer;
+	color: #005fa2; /*sCTextOn*/
+	background-color: #90EE90; /*sCTabOn*/
+	padding: 5px;
+	padding-right: 1px;
+}
+  
+div.selectedWidget:hover {
+	color: #005fa2;;
+	background-color: lightblue;
+}
+  
+div.unselectedWidget {
+	cursor: pointer;
+	color: #ffffff; /*cCTextOff*/
+	background-color: #bbbbbb;  /*sCTabOff*/
+	padding: 5px;
+	padding-right: 1px;
+}
+  
+div.unselectedWidget:hover {
+	color: white;
+	background-color: lightblue;
+}
+div.selectedToggle {
+	cursor: pointer;
+	font-size: 100%;
+	color: #005fa2; /*sCTextOn*/
+	background-color: #90EE90; /*sCTabOn*/
+	padding: 5px;
+  }
+  
+  div.selectedToggle:hover {
+	color: #005fa2;;
+	background-color: lightblue;
+  }
+  
+  div.unselectedToggle {
+	cursor: pointer;
+	font-size: 100%;
+	color: #ffffff; /*cCTextOff*/
+	background-color: #bbbbbb;  /*sCTabOff*/
+	padding: 5px;
+  }
+  
+  div.unselectedToggle:hover {
+	color: white;
+	background-color: lightblue;
+  }
+  iv.toggleVolSelected {
+	cursor: pointer;
+	font-size: 80%;
+	color: #005fa2; /*sCTextOn*/
+	background-color: #90EE90; /*sCTabOn*/
+  }
+  
+  div.toggleVolSelected:hover {
+	color: #005fa2;;
+	background-color: lightblue;
+  }
+  
+  div.toggleVolUnselected {
+	cursor: pointer;
+	font-size: 80%;
+	color: #ffffff; /*cCTextOff*/
+	background-color: #bbbbbb;  /*sCTabOff*/
+  }
+  
+  div.toggleVolUnselected:hover {
+	color: white;
+	background-color: lightblue;
+  }
+  
+  div.tabcontrol {
+	position: relative;
+	left: 30px;
+	cursor: pointer;
+  }
+
+div.pictureLEHD {
+	width:25px; /*width of your image*/
+	height:25px; /*height of your image*/
+	background-image:url('../images/icon_forecast_blue.png');
+	margin:0; /* If you want no margin */
+	padding:0; /*if your want to padding */
+	/*display:inline;*/
+}
+  
+div.pictureSL {
+	width:25px; /*width of your image*/
+	height:25px; /*height of your image*/
+	background-image:url('../images/icon_change_white.png');
+	margin:0; /* If you want no margin */
+	padding:0; /*if your want to padding */
+	/*display:inline;*/
+}
+  
+div.pictureLEHDVSL {
+	width:25px; /*width of your image*/
+	height:25px; /*height of your image*/
+	background-image:url('../images/icon_vs_white.png');
+	margin:0; /* If you want no margin */
+	padding:0; /*if your want to padding */
+	/*display:inline;*/
+}
+
 p.normal {
     font-weight: normal;
 }

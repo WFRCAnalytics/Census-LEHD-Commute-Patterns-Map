@@ -36,32 +36,6 @@
           "classMin2":  10,
           "classMin3":  20,
           "classMin4":  40
-        },
-      "num":
-        {
-          "units": " people",
-          "beginColor": "darkturquoise",
-          "endColor": "red",
-          "numClasses":  6,
-          "classMin0":  -10000,
-          "classMin1":  -1000,
-          "classMin2":  -100,
-          "classMin3":  100,
-          "classMin4":  1000,
-          "classMin5":  10000
-        },
-      "percent":
-        {
-          "units": " percent of people",
-          "beginColor": "darkturquoise",
-          "endColor": "red",
-          "numClasses":  6,
-          "classMin0":  -1000,
-          "classMin1":  -100,
-          "classMin2":  -10,
-          "classMin3":  10,
-          "classMin4":  100,
-          "classMin5":  1000
         }
   },
   {
@@ -101,32 +75,6 @@
           "classMin2":  10,
           "classMin3":  20,
           "classMin4":  40
-        },
-        "num":
-          {
-            "units": " people",
-            "beginColor": "darkturquoise",
-            "endColor": "red",
-            "numClasses":  6,
-            "classMin0":  -10000,
-            "classMin1":  -1000,
-            "classMin2":  -100,
-            "classMin3":  100,
-            "classMin4":  1000,
-            "classMin5":  10000
-          },
-        "percent":
-          {
-            "units": " percent of people",
-            "beginColor": "darkturquoise",
-            "endColor": "red",
-            "numClasses":  6,
-            "classMin0":  -1000,
-            "classMin1":  -100,
-            "classMin2":  -10,
-            "classMin3":  10,
-            "classMin4":  100,
-            "classMin5":  1000
-          }
+        }
   }
 ]
