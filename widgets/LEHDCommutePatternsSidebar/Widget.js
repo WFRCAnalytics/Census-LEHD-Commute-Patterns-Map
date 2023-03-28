@@ -167,21 +167,6 @@ function(declare, BaseWidget, LayerInfos, RainbowVis, dom, PanelManager, LayerIn
         }
       }
 
-      //Populate BinData Object
-      dojo.xhrGet({
-        url: "widgets/LEHDCommutePatternsSidebar/data/bindata.json",
-        handleAs: "json",
-        load: function(obj) {
-            /* here, obj will already be a JS object deserialized from the JSON response */
-            console.log('bindata.json');
-            bindata = obj;
-        },
-        error: function(err) {
-            /* this will execute if the response couldn't be converted to a JS object,
-                or if the request was unsuccessful altogether. */
-        }
-      });
-
       //Populate AreaData Object
       dojo.xhrGet({
         url: "widgets/LEHDCommutePatternsSidebar/data/citytownshipdata.json",
